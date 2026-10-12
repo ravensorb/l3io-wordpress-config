@@ -410,3 +410,35 @@ all. Shawn chose a traceability table instead.
   ("no such table: meta"), so a full `make ci` failed or passed at random. Two consecutive
   full replays: 11 of 11 green, and no root-owned file in the tree. The root-owned `dist/`
   and `.coverage` already there were removed through a container.
+
+### Brief step 3 — the parser against ADR-0010 (2026-10-12)
+
+**Revisit condition (a) is met, in a stronger form than the ADR anticipated.** It names
+"a read-back failure ... against a `wp-config.php` that WordPress itself wrote". What happens
+instead is silent corruption with read-back passing:
+
+- [blocked] **A value containing `)` then `;` is cut short and corrupted on write.** The
+  define pattern ends the value at the first `\s*\)\s*;`, inside quotes or not.
+  `define( 'AUTH_KEY', 'ab);cd' );` reads as `'ab`, and `set()` writes
+  `define( 'AUTH_KEY', 'new');cd' );`, which is a PHP syntax error. It returns success, and
+  read-back passes, because it re-scans with the same pattern. Measured against
+  WordPress's own salt API (`api.wordpress.org/secret-key/1.1/salt/`, the source
+  `wp-config-sample.php` points to): **3 of 320 salts misread, 3 of 40 salt sets (7.5%)**.
+  `DB_PASSWORD`, which a restore rewrites, is exposed the same way.
+- [blocked] **The variable pattern has the same flaw with `;`**: `$a = 'x;y';` reads as `'x`.
+- [blocked] **Indented assignments are matched, despite the comment saying otherwise.**
+  `_VARIABLE_RE` is anchored `^[ \t]*`, so `$table_prefix` assigned inside a function body
+  above the file-scope one is the one `get_variable()` returns.
+
+**Revisit condition (b) is not met.** `lphply` 2.2.1 (2026-08-13) is maintained, but it is a
+general PHP parser rather than a round-tripping constants library, and it needs `ply` at
+runtime, which AD-2 forbids. `wpconfigger` has had one release, in 2022. `phply` and
+`jk-php-tokenizer` have had none since 2023 and 2020.
+
+The fixture `tests/wp-config-sample.original.php` differs from WordPress's current
+`wp-config-sample.php` only in comments and blank lines. WP-CLI's `config create` template
+indents `define( 'WP_DEBUG', false );` inside an `if` block, which the define pattern
+matches, correctly.
+
+Put to Shawn: fix inside ADR-0010's Option C (quote-aware value spans, column-0 variables),
+or reopen the ADR. Not acted on.
