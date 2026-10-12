@@ -312,7 +312,7 @@ classifier this session, so the 2026-10-03 registry list stands as recorded, unc
   3.11–3.14); the `contracts` subset runs pass `--no-cov`. Planted violation: ignoring
   `tests/test_cli.py` fails at 75.90%. Replayed under act: `contracts` and all four `test`
   legs green.
-- [todo] **`make ci` / `make ci-job` fail outside a TTY on this machine.** The `Makefile`
+- [done] **`make ci` / `make ci-job` fail outside a TTY on this machine.** The `Makefile`
   comment above `ACT_BARE_SECRETS` says act "does not prompt for [GITHUB_TOKEN] when absent";
   tested 2026-10-12, it does prompt (`Provide value for 'GITHUB_TOKEN'`, act 0.2.89,
   `~/.actrc` declares `-s GITHUB_TOKEN`) and then fails. Earlier sessions likely had the
@@ -362,7 +362,7 @@ all. Shawn chose a traceability table instead.
   for the backup session. No backup session was open, so database put them to Shawn directly.
   Its answers:
   - AD-30 is cited in database too, in 7 places, so whatever backup decides applies to both.
-  - [todo] **database's `make ci` does not have the TTY failure.** Its Makefile wraps act
+  - [done] **database's `make ci` does not have the TTY failure.** Its Makefile wraps act
     in `infisical run ... --env prod`, which is ADR-0013's mechanism and puts `GITHUB_TOKEN`
     in the environment. Config's placeholder approach is the outlier, so the likely fix
     for config's `make ci-job` is to align with database's wrapper rather than amend the
@@ -391,3 +391,14 @@ all. Shawn chose a traceability table instead.
   (no extras here, no script run against the wheel; both would fail as vacuous). `packaging`
   declared in the dev group. All seven traceability gaps are now closed. Database's matrices
   stop at 3.13, so **whether database adds 3.14 is still open on its side.**
+- [done] **`make ci` runs under `infisical run`**, with the same `INFISICAL*`/`ACT_RUNNER` block as
+  database's Makefile. That restores ADR-0013 and fixes the TTY failure. Verified with
+  `GITHUB_TOKEN` unset and stdin closed: `ci-list`, `ci-job JOB=contracts`, `ci-dryrun`
+  (every leg) and the whole pipeline, 11 of 11 jobs green. `ci-dryrun` already referenced
+  `$(ACT_RUNNER)`, which this Makefile never defined.
+- [todo] **A stale `dist/` fails `verify-install` under act.** act binds the working tree,
+  so a wheel left by any earlier build makes the job's "exactly one wheel" guard find
+  several. That happened today (6 wheels, 0.0.2.dev4 to 0.0.3.dev16), and each run leaves a
+  new one behind, so the next `make ci` after a commit fails the same way until
+  `rm -rf dist`. The guard is right. Whether `make ci` should clear `dist/` first is a
+  choice, because it deletes build output someone may want; not made.

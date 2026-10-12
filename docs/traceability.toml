@@ -365,4 +365,4 @@ enforced_by = [
     "tests/test_act_dryrun_legs.py::test_every_workflow_outside_make_ci_has_at_least_one_leg",
     "tests/test_workflow_gates.py::test_no_workflow_gates_on_env_act",
 ]
-note = "It says `make ci` runs act under `infisical run`. This repository's Makefile instead passes placeholders, because ci.yml uses no secrets -- a deliberate departure recorded in the Makefile, not in the ADR."
+note = "`make ci` runs act under `infisical run`, as the ADR says, since 2026-10-12. Before that this repository passed placeholder secrets instead, which broke every replay outside a TTY."

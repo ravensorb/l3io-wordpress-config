@@ -6,10 +6,9 @@
 # First-time setup:
 #   make act-init   copies .act.{vars,env,secrets}.example -> .act.{vars,env,secrets}
 #
-# Unlike the sibling repositories, `make ci` does NOT run under `infisical run`:
-# ci.yml declares no secrets, because this package has no database, no registry
-# step and no publish path in CI. publish.yml does need credentials, and act
-# never runs it.
+# `make ci` runs act under `infisical run`, as ADR-0013 specifies and as the
+# sibling repositories do. ci.yml itself uses no secrets; the environment is
+# needed because ~/.actrc declares them (see ACT_RUNNER below).
 #
 # Useful targets:
 #   make lint         ruff check + format --check
@@ -25,28 +24,26 @@
 ACT_FILES := .act.vars .act.env .act.secrets
 UV := uv
 
-# ~/.actrc declares shared publish and registry credentials as bare `-s NAME`
-# for the sibling repositories. act prompts for any it cannot resolve and then
-# fails outside a TTY, which blocks local replay entirely. ci.yml here uses none
-# of them -- this package has no database, no registry step and no publish path
-# in CI -- so they are resolved to an obvious placeholder.
+# ~/.actrc declares secrets as bare `-s NAME`, which act resolves from the
+# environment; `infisical run` is what puts them there. act prompts for any
+# that are unset OR empty and then fails on a non-interactive terminal, so the
+# secrets have to be present even though ci.yml uses none of them. That includes
+# GITHUB_TOKEN: an earlier version of this file left it unset on the claim that
+# act does not prompt for it, and on 2026-10-12 act 0.2.89 did, failing every
+# `make ci-job` outside a TTY.
 #
-# The placeholder must be NON-EMPTY: act treats an empty environment value as
-# unset and prompts anyway, then fails outside a TTY. `--secret-file` does not
-# satisfy a bare `-s NAME` declaration at all; only the environment does.
+# Do NOT substitute placeholder values. A bogus GITHUB_TOKEN is worse than an
+# absent one: act passes it to git as a credential when fetching actions, and
+# the fetch fails with "authentication required" instead of proceeding
+# anonymously.
 #
-# GITHUB_TOKEN is excluded deliberately: act does not prompt for it when absent,
-# and a PLACEHOLDER value is worse than none -- act hands it to git when fetching
-# actions, and GitHub rejects it, so action resolution fails. Absent means an
-# anonymous clone, which is what these public actions need.
-#
-# The list is read from ~/.actrc rather than written out here, so it cannot
-# drift from what act actually declares.
-#
-# publish.yml is the one place these matter, and act never runs it (see .actrc).
-# Supply them through `infisical run` when that changes.
-ACT_BARE_SECRETS := $(shell grep -hE '^-s [A-Za-z_][A-Za-z0-9_]*$$' $(HOME)/.actrc 2>/dev/null | awk '{print $$2}' | grep -v '^GITHUB_TOKEN$$')
-ACT := env $(foreach s,$(ACT_BARE_SECRETS),$(s)=unused-by-this-repo) act
+# Kept identical to l3io-wordpress-database's Makefile. INFISICAL_ENV must be
+# prod: `infisical secrets` returns an empty string, exit 0, for any other.
+INFISICAL ?= infisical
+INFISICAL_PROJECT ?= 45365f20-36e8-4d4d-87f3-1554c5ae0615
+INFISICAL_ENV ?= prod
+ACT_RUNNER ?= $(INFISICAL) run --projectId $(INFISICAL_PROJECT) --env $(INFISICAL_ENV) --
+ACT ?= act
 
 .PHONY: help act-init lint format types test contracts namespace-check check ci ci-job ci-dryrun ci-dryrun-one ci-list build verify-wheel clean
 
@@ -96,14 +93,14 @@ verify-wheel: build ## Install the built wheel into a clean environment and impo
 # ---- local CI replay -------------------------------------------------------
 
 ci: act-init ## Replay the full CI pipeline locally
-	$(ACT) push
+	$(ACT_RUNNER) $(ACT) push
 
 ci-job: act-init ## Replay one job: make ci-job JOB=contracts
 	@test -n "$(JOB)" || { echo "usage: make ci-job JOB=<job-id>"; exit 2; }
-	$(ACT) push -j $(JOB)
+	$(ACT_RUNNER) $(ACT) push -j $(JOB)
 
 ci-list: act-init ## List the jobs act can see
-	$(ACT) push --list
+	$(ACT_RUNNER) $(ACT) push --list
 
 # ---------------------------------------------------------------------------
 # Validating the workflows act CANNOT execute
