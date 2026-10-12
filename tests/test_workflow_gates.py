@@ -1,0 +1,148 @@
+"""Workflow conditions that a governing rule depends on.
+
+* **AD-15** -- PyPI publication is never triggered by a tag: it burns a filename
+  permanently, so it must be a decision rather than a side effect. Every job that
+  runs ``pypa/gh-action-pypi-publish`` must therefore be reachable only from
+  ``workflow_dispatch``. TestPyPI burns filenames the same way, so it is held to
+  the same rule rather than exempted.
+* **ADR-0013** -- gate on ``vars.LOCAL_ACT``, never ``env.ACT``: Gitea runners also
+  set ``ACT=true``, and ``env.ACT`` does not work in a job-level ``if:``.
+
+Both read the PARSED workflow, so a comment explaining the rule -- ci.yml carries
+one naming ``env.ACT`` -- is not mistaken for a use of it. Scope is every file in
+``.github/workflows/``, never a list of names.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+
+WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+PUBLISH_ACTION = "pypa/gh-action-pypi-publish"
+DISPATCH_ONLY = "github.event_name == 'workflow_dispatch'"
+ENV_ACT_RE = re.compile(r"\benv\.ACT\b")
+
+
+def _workflows() -> list[Path]:
+    found = sorted([*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")])
+    assert found, f"no workflows under {WORKFLOWS} -- an empty scope skips, not fails"
+    return found
+
+
+def _load(path: Path) -> dict[str, Any]:
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+
+def publish_gate_problem(job: dict[str, Any]) -> str | None:
+    """None if ``job`` can run only from workflow_dispatch, else why not."""
+    condition = " ".join(str(job.get("if", "")).split())
+    if not condition:
+        return "has no if: -- it runs on every trigger the workflow declares"
+    if "||" in condition:
+        return f"if: contains '||', so dispatch is one route among several: {condition}"
+    conjuncts = [
+        c.strip().removeprefix("${{").removesuffix("}}").strip() for c in condition.split("&&")
+    ]
+    if DISPATCH_ONLY not in conjuncts:
+        return f"if: does not require {DISPATCH_ONLY}: {condition}"
+    return None
+
+
+def publishing_jobs(workflow: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    for job_id, job in (workflow.get("jobs") or {}).items():
+        if any(str(s.get("uses", "")).startswith(PUBLISH_ACTION) for s in job.get("steps", [])):
+            yield job_id, job
+
+
+def env_act_uses(node: Any, where: str = "") -> list[str]:
+    """Every parsed string (key or value) that names env.ACT, with its path."""
+    if isinstance(node, dict):
+        return [
+            hit
+            for key, value in node.items()
+            for hit in env_act_uses(str(key), f"{where}/{key}")
+            + env_act_uses(value, f"{where}/{key}")
+        ]
+    if isinstance(node, list):
+        return [hit for i, item in enumerate(node) for hit in env_act_uses(item, f"{where}[{i}]")]
+    if isinstance(node, str) and ENV_ACT_RE.search(node):
+        return [f"{where}: {node.strip()[:80]}"]
+    return []
+
+
+def test_some_job_publishes() -> None:
+    """Otherwise the gate test below passes over an empty set."""
+    assert any(True for path in _workflows() for _ in publishing_jobs(_load(path)))
+
+
+@pytest.mark.parametrize("path", _workflows(), ids=lambda p: p.name)
+def test_every_publishing_job_runs_only_from_dispatch(path: Path) -> None:
+    """AD-15: a tag, a push or a release event can never reach a PyPI upload."""
+    problems = [
+        f"{path.name}::{job_id} {problem}"
+        for job_id, job in publishing_jobs(_load(path))
+        if (problem := publish_gate_problem(job))
+    ]
+    assert not problems, "\n".join(problems)
+
+
+@pytest.mark.parametrize("path", _workflows(), ids=lambda p: p.name)
+def test_no_workflow_gates_on_env_act(path: Path) -> None:
+    """ADR-0013: vars.LOCAL_ACT, never env.ACT."""
+    hits = env_act_uses(_load(path))
+    assert not hits, "\n".join(hits)
+
+
+# ---- planted violations ------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("condition", "fragment"),
+    [
+        (None, "has no if:"),
+        ("startsWith(github.ref, 'refs/tags/')", "does not require"),
+        ("github.event_name == 'workflow_dispatch' || github.event_name == 'push'", "'||'"),
+        ("github.event_name != 'workflow_dispatch'", "does not require"),
+    ],
+)
+def test_the_publish_gate_rejects_a_reachable_job(condition: str | None, fragment: str) -> None:
+    job = {} if condition is None else {"if": condition}
+    assert fragment in (publish_gate_problem(job) or "")
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "github.event_name == 'workflow_dispatch' && inputs.target == 'pypi'",
+        "${{ github.event_name == 'workflow_dispatch' }}",
+        ">-\n  github.event_name == 'workflow_dispatch'\n  && inputs.target == 'pypi'",
+    ],
+)
+def test_the_publish_gate_accepts_a_dispatch_only_job(condition: str) -> None:
+    assert publish_gate_problem({"if": condition.removeprefix(">-\n")}) is None
+
+
+def test_a_publish_step_under_any_ref_is_found() -> None:
+    workflow = {"jobs": {"j": {"steps": [{"uses": f"{PUBLISH_ACTION}@v1.12.4"}]}}}
+    assert [job_id for job_id, _ in publishing_jobs(workflow)] == ["j"]
+
+
+def test_env_act_is_found_wherever_it_is_parsed() -> None:
+    workflow = yaml.safe_load(
+        "# a comment naming env.ACT is not a use\n"
+        "jobs:\n"
+        "  a:\n"
+        "    if: ${{ !env.ACT }}\n"
+        "    steps:\n"
+        "      - run: echo ${{ env.ACT }}\n"
+        "      - if: vars.LOCAL_ACT\n"
+    )
+    hits = env_act_uses(workflow)
+    assert len(hits) == 2, hits
+    assert not env_act_uses({"if": "vars.LOCAL_ACT"})

@@ -54,7 +54,10 @@ reason = "Binds the Site Descriptor and its consumers in database and backup. Th
 id = "AD-4"
 source_sha256 = "aaa6f8c56642e895485eaf645be42443eb7a82f21a825bacd2dfc4048343610f"
 binds = true
-untested = "No grep gate for dry_run/what_if outside a composition root. It would pass today -- this package has no Dry Run surface -- and would catch one being added inside core/ or adapters/."
+enforced_by = [
+    "tests/test_architecture.py::test_no_library_module_names_a_dry_run_flag",
+    "tests/test_architecture.py::test_the_composition_root_is_excluded_and_nothing_else",
+]
 note = "Binds 'every adapter'. The query/command port split is moot here: WpConfigSource has no Dry Run counterpart."
 
 [[rule]]
@@ -91,7 +94,10 @@ reason = "Credential providers belong to database."
 id = "AD-10"
 source_sha256 = "e8b54c72cd5fe968ec5e5162d6a9c25560a9bf8205b868cd21ada37150a10e8c"
 binds = true
-untested = "Nothing asserts that library modules only call logging.getLogger(__name__) and that only cli/ configures logging (cli/main.py calls basicConfig, which is the composition root's right). An AST test over src/ would catch a handler or basicConfig added below cli/."
+enforced_by = [
+    "tests/test_architecture.py::test_no_library_module_configures_logging",
+    "tests/test_architecture.py::test_the_composition_root_is_excluded_and_nothing_else",
+]
 note = "The rule carves this package out of structlog explicitly. That half is held by AD-2's zero-dependency checks."
 
 [[rule]]
@@ -121,8 +127,11 @@ enforced_by = [
     "tests/test_file_adapter.py::test_errors_carry_structured_fields",
     "tests/test_file_adapter.py::test_every_public_error_descends_from_one_base",
     "tests/test_verification.py::test_problem_text_never_quotes_a_value",
+    "tests/test_error_boundary.py::test_no_public_method_leaks_a_foreign_exception",
+    "tests/test_error_boundary.py::test_no_constructor_leaks_a_foreign_exception",
+    "tests/test_error_boundary.py::test_a_hostile_file_raises_a_package_owned_error",
+    "tests/test_error_boundary.py::test_a_file_that_turns_hostile_after_opening_is_reported_as_ours",
 ]
-untested = "Only the file-adapter paths are exercised. Nothing derives the set of public entry points and asserts none lets OSError, TypeError or ValueError escape."
 
 [[rule]]
 id = "AD-15"
@@ -131,8 +140,8 @@ binds = true
 enforced_by = [
     ".github/workflows/ci.yml::verify-install::install the wheel into an isolated environment and import it",
     ".github/workflows/publish.yml::smoke::install, import, and agree on one version",
+    "tests/test_workflow_gates.py::test_every_publishing_job_runs_only_from_dispatch",
 ]
-untested = "That publish-pypi is unreachable from a tag lives only in its job-level if: -- no test reads it."
 not_checkable = "Release order across the three repositories and resolvability from PyPI are cross-repository facts; nothing in this repository can observe them. AD-15 is currently NOT satisfied -- nothing is on PyPI."
 
 [[rule]]
@@ -281,8 +290,11 @@ enforced_by = [
     ".github/workflows/publish.yml::namespace::dependency metadata is clean in BOTH artifacts",
     ".github/workflows/publish.yml::smoke::install, import, and agree on one version",
     ".github/workflows/ci.yml::verify-install::install the wheel into an isolated environment and import it",
+    "tests/test_entry_points.py::test_the_one_console_script_is_named_for_the_distribution",
+    "tests/test_entry_points.py::test_the_console_script_target_exists",
+    "tests/test_entry_points.py::test_both_entry_points_run_and_agree",
 ]
-untested = "Nothing asserts the console script is declared, named for the distribution, and runnable alongside python -m l3io.wp.config. CI's `uv sync --locked` is an unnamed step, so it holds by being run, not by being checked."
+untested = "CI's `uv sync --locked` is an unnamed step, so it holds by being run, not by being checked."
 note = "Its Console scripts section names the script `l3io-wp-config`; the distribution was renamed and the script with it (`l3io-wordpress-config`). The ADR text was not updated -- reported, not resolved here."
 
 [[rule]]
@@ -317,6 +329,9 @@ enforced_by = [
     "tests/test_verification.py::test_wordpress_own_spacing_is_not_a_mismatch",
     "tests/test_cli.py::test_a_falsy_value_and_an_absent_key_differ_in_exit_code",
     "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
+    "tests/test_parser_scope.py::test_a_non_finite_float_is_refused_on_both_paths",
+    "tests/test_parser_scope.py::test_a_non_finite_float_never_reaches_the_file",
+    "tests/test_parser_scope.py::test_an_invalid_key_is_refused_before_anything_is_written",
 ]
 not_checkable = "The 'Revisit when' conditions -- a read-back failure on a file WordPress itself wrote, or a maintained round-tripping PHP-constant library appearing -- are events in the world, not properties of this code."
 
@@ -344,6 +359,6 @@ binds = true
 enforced_by = [
     "tests/test_act_dryrun_legs.py::test_every_declared_trigger_has_a_leg",
     "tests/test_act_dryrun_legs.py::test_every_workflow_outside_make_ci_has_at_least_one_leg",
+    "tests/test_workflow_gates.py::test_no_workflow_gates_on_env_act",
 ]
-untested = "Nothing asserts that no workflow gates on env.ACT rather than vars.LOCAL_ACT."
 note = "It says `make ci` runs act under `infisical run`. This repository's Makefile instead passes placeholders, because ci.yml uses no secrets -- a deliberate departure recorded in the Makefile, not in the ADR."
