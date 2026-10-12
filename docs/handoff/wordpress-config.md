@@ -49,7 +49,8 @@ the cheaper action.
 
 ## Open, not blocked
 
-- [todo] No spec exists for this package and there is no `spec-index.md`, so CI's
+- [done — superseded 2026-10-12 by `docs/traceability.toml`; the premise below was wrong,
+  see "Brief step 2"] No spec exists for this package and there is no `spec-index.md`, so CI's
   spec-pointer and spec-freshness checks skip entirely. **Nothing mechanically verifies that
   this code and the governing ADRs still agree** — the last alignment pass was by hand and
   will rot. `wordpress-backup` reported their own spec index came out at 24,720 bytes against
@@ -317,8 +318,7 @@ classifier this session, so the 2026-10-03 registry list stands as recorded, unc
   tested 2026-10-12, it does prompt (`Provide value for 'GITHUB_TOKEN'`, act 0.2.89,
   `~/.actrc` declares `-s GITHUB_TOKEN`) and then fails. Earlier sessions likely had the
   variable exported. Workaround that worked: `GITHUB_TOKEN="$(gh auth token)" make ci-job
-  JOB=...`. Not fixed — whether the `Makefile` should supply it is a design change, and the
-  comment is wrong either way.
+  JOB=...`. Fixed later the same day by running act under `infisical run`; see below.
 
 ### Brief step 2 — replaced: traceability instead of a spec index (2026-10-12)
 
@@ -339,10 +339,8 @@ all. Shawn chose a traceability table instead.
   - [done] AD-14 — only file-adapter paths checked; public entry points not derived.
   - [done] AD-15 — `publish-pypi`'s never-from-a-tag `if:` is unchecked.
   - [done] ADR-0007 — console script + `python -m` untested.
-  - [done] ADR-0009 — Python floor and matrix coverage untested; this is FR-48, whose family
-    shape is `l3io-wordpress-database`'s `tests/test_declared_facts.py`, blocked here on 3.14.
-    Note ADR-0009 says the matrix covers "every version in the range", and `>=3.11` is
-    open-ended — that reads in favour of *adding* the 3.14 classifier. Still Shawn's call.
+  - [done] ADR-0009 — Python floor and matrix coverage untested. Closed by porting
+    `l3io-wordpress-database`'s FR-48 check, after Shawn declared 3.14 supported.
   - [done] ADR-0013 — no check that workflows never gate on `env.ACT`.
 
 **Problems in the authoritative documents** — reported, not resolved; they live in
@@ -355,9 +353,8 @@ all. Shawn chose a traceability table instead.
   matching carve-out. Judged non-binding by AD-2's precedence.
 - [blocked] **ADR-0007** still names the console script `l3io-wp-config`.
 - [blocked] **ADR-0012** still says the fork republishes at "a version above 1.4".
-- [blocked] **ADR-0013** says `make ci` runs act under `infisical run`; this repo's
-  `Makefile` uses placeholders instead. That is the same spot where `make ci-job` now fails
-  outside a TTY (see step 1's entry), so the ADR's mechanism may also be the fix.
+- [done — no longer a discrepancy] **ADR-0013** says `make ci` runs act under
+  `infisical run`. This repo's `Makefile` used placeholders instead; it now matches the ADR.
 - Relayed the five document problems to `l3io-wordpress-database-24`, at Shawn's direction,
   for the backup session. No backup session was open, so database put them to Shawn directly.
   Its answers:
@@ -366,14 +363,14 @@ all. Shawn chose a traceability table instead.
     in `infisical run ... --env prod`, which is ADR-0013's mechanism and puts `GITHUB_TOKEN`
     in the environment. Config's placeholder approach is the outlier, so the likely fix
     for config's `make ci-job` is to align with database's wrapper rather than amend the
-    ADR. Not done.
+    ADR. Done below.
 
 ### The seven gaps — six closed, and what closing AD-14 found (2026-10-12)
 
 - [done] Tests for AD-4, AD-10, AD-14, AD-15, ADR-0007 and ADR-0013; `docs/traceability.toml`
   rows moved from `untested` to `enforced_by`. Every guard was mutation-tested against the
   real tree (planted in `core/`, `publish.yml`, `ci.yml`, `pyproject.toml`) and failed.
-  ADR-0009 stays open behind the 3.14 decision.
+  ADR-0009 followed once 3.14 was decided.
 - **Defects the AD-14 boundary test found, all fixed with Shawn's approval:**
   - `UnicodeDecodeError` (a non-UTF-8 file), `ValueError` (a NUL in the path), `TypeError`
     (a `None` path) and `UnicodeEncodeError` (a lone surrogate in a value) all escaped
@@ -400,8 +397,7 @@ all. Shawn chose a traceability table instead.
   so a wheel left by any earlier build makes the job's "exactly one wheel" guard find
   several. That happened today (6 wheels, 0.0.2.dev4 to 0.0.3.dev16), and each run leaves a
   new one behind, so the next `make ci` after a commit fails the same way until
-  `rm -rf dist`. The guard is right. Whether `make ci` should clear `dist/` first is a
-  choice, because it deletes build output someone may want; not made.
+  `rm -rf dist`. The guard is right. Resolved in the next entry, not by clearing `dist/`.
 - [done] **Nothing a CI job writes lands in the working tree any more.** Clearing `dist/` from
   `make ci` was the wrong fix: act's containers run as root, so `dist/` was root-owned and
   `rm` failed. Restructured instead. `verify-install` and `tools/check_namespace_coexistence.py`
@@ -441,7 +437,7 @@ indents `define( 'WP_DEBUG', false );` inside an `if` block, which the define pa
 matches, correctly.
 
 Put to Shawn: fix inside ADR-0010's Option C (quote-aware value spans, column-0 variables),
-or reopen the ADR. Not acted on.
+or reopen the ADR. He chose the fix.
 - [done] **Fixed within Option C** (Shawn, 2026-10-12). Quoted strings are atomic tokens in
   the value pattern, and variables are anchored at column 0. Tests: three real salts, and
   `hypothesis` properties over values dense in `);`, `')`, `\'` and `"`. The expected
@@ -455,3 +451,53 @@ or reopen the ADR. Not acted on.
   traceability drift test. It is the only grader independent of the scanner. Not done.
 - [blocked] ADR-0010 should record that condition (a) was met and how it was answered. That
   is backup's document.
+
+---
+
+## Session close — 2026-10-12: state at handoff
+
+The hardening brief's steps 1–3 are done. Step 4 (the `[blocked]` decisions) was not
+reached; every one is still open and still Shawn's. **Nothing is pushed:** `main` is ahead
+of `origin/main` by every commit of this session (`git log origin/main..main`), and the last
+GitHub CI run is still `c379ae3`. The first push will be GitHub's first sight of all of it,
+so watch that run. Everything below was verified locally: `make check` and a full
+`make ci` replay (11 of 11) on the final tree.
+
+**Where things stand, measured at the final commit:** 248 tests (247 and 1 skipped without
+the sibling), 94.75% line coverage against a floor of 94, `make ci` 11 of 11 under
+`infisical run` with nothing written into the working tree, and `check-cicd-alignment.py`
+at 3 repos, 0 findings.
+
+**Behaviour changes a consumer will see** (database was told each, and confirmed it is
+compatible):
+- New `ConfigKeyError`. A key to write must be a PHP identifier.
+- `nan`/`inf`/`-inf` raise `ConfigValueError` instead of corrupting the file.
+- No stdlib exception escapes `WpConfigFile`.
+- Values containing `);` or `;` inside quotes now read and write correctly, and only
+  column-0 `$variables` are read.
+- Python 3.14 is declared.
+
+**Still open, in rough priority order:**
+1. [todo] **Push**, then watch GitHub's first CI run of this session's work. It has only run
+   under act so far.
+2. [blocked] Step 4 of the brief: the legacy two-component tags, the retired-name release
+   assets, publishing to PyPI, and the Gitea org's visibility. Unchanged since 2026-10-03.
+3. [blocked] Backup's documents: AD-30 is undefined, AD-24 conflicts with AD-2, and ADR-0007,
+   ADR-0010 and ADR-0012 are stale. All five were put to Shawn via the database session;
+   ADR-0010 should also record that condition (a) was met.
+4. [todo] Optional: run the PHP 8.4 check as a local-only test (see step 3).
+5. [blocked] Doctor Check 24: whether the family gets a `CLAUDE.md` agent block.
+6. [todo] Doctor's missing `scripts/tests/test-detect-layout.py`, which is the module
+   author's call.
+7. [todo] The Gitea registry contents were not re-read this session.
+8. Family questions that sit with database: whether it adds 3.14; its stale-wheel AD-27
+   test (put to Shawn); and the root-owned `.coverage`/`dist` act leftovers it shares.
+
+**Lessons from this session, worth keeping:**
+- **Every check here was proved by planting a failure, and three would have passed without
+  doing so.** The span property drew `)` and `;` one character at a time and never put them
+  side by side. `make ci` passed once with a race in it. The spec index read as coverage
+  while checking nothing.
+- **A read-back that re-scans with the scanner it verifies cannot catch the scanner's
+  bugs.** Two separate corruptions (`nan`, and `);` in values) passed it. Only an
+  independent grader found them: a template, or PHP itself.
