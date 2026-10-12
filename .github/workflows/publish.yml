@@ -396,6 +396,16 @@ jobs:
       - uses: actions/download-artifact@v8
         with: { name: dist, path: dist }
 
+      # The previous RELEASE tag: three components only, so a floating tag on
+      # the same commit can never be taken for it. Empty on the first release.
+      - name: the previous release tag
+        id: previous
+        run: |
+          set -euo pipefail
+          prev=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          echo "tag=${prev}" >> "$GITHUB_OUTPUT"
+          echo "previous release tag: ${prev:-none}"
+
       - name: build the release notes from the commit log
         # Notes come from commit messages, not a hand-maintained file: one source
         # rather than two that drift. COMMIT mode because this repo's history is
@@ -411,6 +421,10 @@ jobs:
           platform: github
           token: ${{ secrets.GITHUB_TOKEN }}
           mode: COMMIT
+          # Explicit, never auto-detected. Auto-detection takes the nearest tag, and
+          # release.yml moves the floating v<major>.<minor> onto this very commit
+          # first: v0.1.0's notes compared v0.1...v0.1.0 and read "no changes".
+          from-tag: ${{ steps.previous.outputs.tag }}
           to-tag: ${{ github.ref_name }}
           configuration: .github/changelog-config.json
           fail-on-error: 'false'

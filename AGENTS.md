@@ -61,7 +61,7 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **258 passing at ~94% coverage** (257 and 1 skipped without the sibling repo).
+- `uv sync --locked` then `uv run pytest`. Expect **259 passing at ~94% coverage** (258 and 1 skipped without the sibling repo).
   `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
   subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
   `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.

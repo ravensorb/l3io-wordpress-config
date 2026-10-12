@@ -222,3 +222,26 @@ def test_the_tag_filter_check_reads_negation_and_order() -> None:
     assert not starts_a_run("v0.0.0", ["v*", "!v0.0.0"])
     assert starts_a_run("v0", ["v*"]), "a bare v* filter does start a run on a floating tag"
     assert not starts_a_run("v0", ["v*.*.*"])
+
+
+def _publish_release_steps() -> list[dict[str, Any]]:
+    job = (_load(WORKFLOWS / "publish.yml").get("jobs") or {}).get("release") or {}
+    steps: list[dict[str, Any]] = job.get("steps", [])
+    assert steps, "publish.yml has no release job -- the check below is vacuous"
+    return steps
+
+
+def test_release_notes_never_start_from_a_floating_tag() -> None:
+    """v0.1.0 shipped with "no changes": auto-detection took the floating v0.1.
+
+    The notes builder must be told its lower bound, and that bound must come from a
+    step that only matches three-component tags.
+    """
+    steps = _publish_release_steps()
+    builder = steps[_index(steps, "LiquidLogicLabs/git-action-release-changelog-builder")]
+    from_tag = str(builder.get("with", {}).get("from-tag", ""))
+    assert "steps.previous.outputs.tag" in from_tag, f"from-tag is {from_tag!r}"
+    previous = next((s for s in steps if s.get("id") == "previous"), None)
+    assert previous is not None, "no step with id 'previous' computes the lower bound"
+    assert "--match 'v[0-9]*.[0-9]*.[0-9]*'" in str(previous.get("run", ""))
+    assert steps.index(previous) < steps.index(builder)
