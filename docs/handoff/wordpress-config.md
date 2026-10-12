@@ -22,7 +22,7 @@ state tree is empty by design.
 - Remote refs: tags `v0.0.0` (version baseline) and `v0.0.2`; branches `main`,
   `legacy/pre-cleanup` and `legacy/upstream-2019`. Older tags, the `v0.0.1` release and
   `dev2` were retired on 2026-10-12; `LEGACY.md` on `legacy/pre-cleanup` lists them.
-- `main` is pushed and green on GitHub CI (11 of 11). 255 tests, 94.75% line coverage
+- `main` is pushed and green on GitHub CI (11 of 11). 258 tests, 94.75% line coverage
   against a floor of 94. Python 3.11–3.14 declared and tested.
 - `docs/traceability.toml` maps every governing rule to what enforces it. All gaps are
   closed.
