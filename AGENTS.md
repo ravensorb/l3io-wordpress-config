@@ -49,7 +49,7 @@ stop.
   gap.
 - Authoritative decisions, in `../l3io-wordpress-backup/`:
   `_bmad-output/implementation-artifacts/handoffs/` (start with `00-SHARED-CONTEXT.md`,
-  then `01-l3io-wordpress-config.md`), `docs/adr/` (13 records), and
+  then `01-l3io-wp-config.md`), `docs/adr/` (13 records), and
   `_bmad-output/planning-artifacts/architecture/architecture-py-wordpress-backup-2026-09-15/ARCHITECTURE-SPINE.md`.
 - `domain/` values and errors · `core/` pure parsing, rendering and verification ·
   `ports/` the Protocol · `adapters/` file I/O · `cli/` the command line.

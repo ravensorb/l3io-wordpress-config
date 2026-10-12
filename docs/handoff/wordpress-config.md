@@ -63,7 +63,7 @@ the cheaper action.
 
 1. `AGENTS.md` here — invariants, CI conventions, registry facts, known pitfalls.
 2. `../l3io-wordpress-backup/_bmad-output/implementation-artifacts/handoffs/` —
-   `00-SHARED-CONTEXT.md` then `01-l3io-wordpress-config.md`. The de facto spec for this package.
+   `00-SHARED-CONTEXT.md` then `01-l3io-wp-config.md`. The de facto spec for this package.
 3. `../l3io-wordpress-backup/docs/adr/` — ADR-0007 (packaging, console scripts), ADR-0010
    (parser scope and read-back), ADR-0012 (naming); and `ARCHITECTURE-SPINE.md` for AD-1,
    AD-2, AD-14, AD-15, AD-27.
@@ -224,3 +224,53 @@ A handoff is read as settled fact, so the distinction is drawn explicitly.
 be read as a populated project passing: `_bmad-output/` holds only empty state scaffolding,
 so 16 of the 25 checks passed over an empty set. This repo still has no stories and no spec
 index, as the 2026-09-27 entries above record.
+
+---
+
+## Update — 2026-10-12: rename, BMad 3.2.4, and the hardening brief
+
+### Done since 2026-10-03
+
+- [done] **Repository renamed** on GitHub `ravensorb/py-wpconfigr` → `ravensorb/l3io-wordpress-config`
+  (GitHub redirects the old URL), and the local folder to `l3io-wordpress-config`. Live
+  references followed in `76e6db2`; historical mentions of the old name are left as written.
+  The per-repo Claude memory moved with the folder.
+- [done] `6ee1dfe` — the l3io **3.2.2 → 3.2.4** reinstall listed under "Loose ends" above,
+  committed. Skill trees are byte-identical to the two siblings. `_bmad/scripts/pm-status.py`
+  is now **3.4.2** in all three repos (installed with its own `self-install`; the module
+  upgrade had left every copy stale at a different version).
+- [done] The read-first pointer to `01-l3io-wordpress-config.md` was wrong in both this file
+  and `AGENTS.md`; the file is `01-l3io-wp-config.md`. Fixed.
+- [done] **Verified 2026-10-12 after the rename**, on a fresh `uv sync --locked`:
+  `pytest` 101 passed, coverage 92%; `../l3io-wordpress-backup/scripts/check-cicd-alignment.py`
+  3 repos, 0 findings.
+- [todo] **Not pushed.** `main` is 2 commits ahead of `origin/main`. Last green GitHub CI:
+  `c379ae3`.
+
+### This session's brief
+
+Shawn's goal: make this package **rock solid and stable** before the other two, since it is
+release 1 of 3 and gates both. Suggested order:
+
+1. `/l3io-doctor`, then reconcile this file. Everything tagged above is from earlier
+   sessions; re-verify before relying on it.
+2. The largest stability gap is the open `[todo]` above: **no spec and no `spec-index.md`**,
+   so nothing mechanically checks that the code and ADR-0010/0007/0012 still agree.
+3. Review the parser against ADR-0010's stated limits. A regex parser is permitted only by
+   that ADR, and its "Revisit when" conditions are the test of whether it still holds.
+4. Settle or re-raise the `[blocked]` decisions (legacy 2-component tags, retired-name
+   release assets, PyPI publish, Gitea org visibility). They remain Shawn's.
+
+### Notes for this session
+
+- Secrets: Infisical, project **`home-lab-discovery`**; this machine has a machine identity
+  configured and the session is approved to read from it. `AGENTS.md`'s trap still applies:
+  `infisical secrets get` without `--env=prod` returns empty with exit 0.
+- Legacy PyPI names `wpdatabase2` (0.0.15) and `wpbackup2` (0.2.21) are owned by this project
+  and still point at the old GitHub URLs, which redirect. The plan for them (tombstone releases
+  pointing at the new names, done last) is in
+  `../l3io-wordpress-backup/_bmad-output/implementation-artifacts/handoffs/04-legacy-names-and-registrations.md`.
+  The legacy `wp-configr` / `wpconfigr` name was upstream's, not ours.
+- PyPI trusted publishing is bound to the GitHub owner/repo/workflow. None of the three
+  `l3io-wordpress-*` names exists on PyPI or TestPyPI (checked 2026-10-12), so register any
+  publisher under the **new** repository name.
