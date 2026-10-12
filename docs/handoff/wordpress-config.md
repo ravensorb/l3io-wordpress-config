@@ -244,8 +244,8 @@ index, as the 2026-09-27 entries above record.
 - [done] **Verified 2026-10-12 after the rename**, on a fresh `uv sync --locked`:
   `pytest` 101 passed, coverage 92%; `../l3io-wordpress-backup/scripts/check-cicd-alignment.py`
   3 repos, 0 findings.
-- [todo] **Not pushed.** `main` is 2 commits ahead of `origin/main`. Last green GitHub CI:
-  `c379ae3`.
+- [todo] **Not pushed.** `main` is ahead of `origin/main` — `git log origin/main..main` for
+  the list; a count written here went stale within the hour. Last green GitHub CI: `c379ae3`.
 
 ### This session's brief
 
@@ -274,3 +274,40 @@ release 1 of 3 and gates both. Suggested order:
 - PyPI trusted publishing is bound to the GitHub owner/repo/workflow. None of the three
   `l3io-wordpress-*` names exists on PyPI or TestPyPI (checked 2026-10-12), so register any
   publisher under the **new** repository name.
+
+### Brief step 1 — `/l3io-doctor` and reconciliation (2026-10-12)
+
+**Doctor: 26 checks, one flag, nothing in its repair sequence.** Read the green as the
+2026-10-03 entry did — narrow. The state tree is empty, there is no `spec-index.md` and no
+`docs/adr/`, so Checks 16, 17 and 19 did not run at all and most of the rest passed over an
+empty set.
+
+- [blocked] **Check 24 — agent instruction block absent.** For `--runtime claude` it would
+  *create* `CLAUDE.md`; this repo has only `AGENTS.md`, and neither sibling has a `CLAUDE.md`
+  either. The doctor itself marks this "on request" and keeps it out of its repair sequence.
+  Not done; Shawn's call whether the family gets one.
+- Check 20 is green with two informational lines: `baseline_drift` (`bmb_version` expected
+  `v2.2.2`, found none — bmb is not installed here) and three `status_contradictions` for
+  deprecated skills the manifest no longer lists. Neither affects this repo.
+- [todo] The `scripts/tests/test-detect-layout.py` loose end above still holds at 3.2.4:
+  `health-check.md` Check 21 still cites it, the installed doctor still ships no
+  `scripts/tests/`, and `payload-manifest.json` still does not list it.
+
+**Re-verified by execution today:**
+- `uv sync --locked` + `pytest`: 101 passed, 92%. `AGENTS.md` still said 85; corrected.
+- `check-cicd-alignment.py`: 3 repos, 0 findings.
+- Remote tags here: `v0.0.0 v0.0.1 v0.0.2 v0.3 v1.0 v1.2 v1.3 v1.4`; database: `v0.0.0 v0.0.1
+  v0.0.2 v1.0`. `v0.0.0` is the annotated "Baseline" tag, not the withdrawn version.
+- Retired-name assets are still attached: `l3io_wp_config-0.0.1.{whl,tar.gz}` on this repo's
+  `v0.0.1`, `l3io_wp_database-0.0.1.{whl,tar.gz}` on database's.
+- PyPI and TestPyPI: 404 for all three `l3io-wordpress-*` names.
+- Last GitHub CI run is still `c379ae3`, green; nothing since has been pushed.
+
+**Not re-verified:** the Gitea registry contents, including whether `l3io-wp-database 0.0.1`
+is still there. Reading the token from Infisical was refused by the harness's permission
+classifier this session, so the 2026-10-03 registry list stands as recorded, unchecked.
+
+**Found while reconciling:**
+- [todo] **No coverage floor.** `addopts` passes `--cov` with a report only; neither
+  `pyproject.toml`, the `Makefile` nor `ci.yml` sets `fail_under`. 92% is observed, not
+  enforced — a deleted test file would leave CI green.
