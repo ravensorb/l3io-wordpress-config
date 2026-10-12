@@ -130,6 +130,10 @@ jobs:
         python: ['3.11', '3.12', '3.13', '3.14']
     env:
       UV_PROJECT_ENVIRONMENT: /tmp/l3io-venv-py${{ matrix.python }}
+      # pytest-cov writes .coverage into the working directory. Under act that is
+      # the host's tree, shared by all four legs at once: they corrupted one
+      # another's data file ("no such table: meta") and left it root-owned.
+      COVERAGE_FILE: /tmp/l3io-coverage-py${{ matrix.python }}
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }  # hatch-vcs needs tags; shallow yields 0.1.devN

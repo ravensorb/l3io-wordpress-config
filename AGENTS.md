@@ -115,6 +115,11 @@ stop.
   `~/.actrc` uses `--bind`, so without it a local replay races four matrix jobs
   over one `.venv` and leaves it root-owned, breaking every later `uv` command.
   `runner.temp` does not work here — the `runner` context is step-level only.
+  **The rule is general: nothing a job writes may land in the working tree.** Under act
+  that tree is the host's, shared by every matrix leg, and written as root. Two more
+  instances were found on 2026-10-12: `dist/` (built wheels, now `WHEEL_DIR`) and
+  `.coverage` (now `COVERAGE_FILE`), the second corrupting itself across concurrent legs
+  so that a full `make ci` failed or passed at random.
 - Prefer restructuring over gating. The one `vars.LOCAL_ACT` use left is cache
   tuning, not a skipped step. If a difference is genuinely unavoidable, express it
   through `vars.LOCAL_ACT` and never `env.ACT`: `env.ACT` does not work in a

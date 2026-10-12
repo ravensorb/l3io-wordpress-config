@@ -396,9 +396,17 @@ all. Shawn chose a traceability table instead.
   `GITHUB_TOKEN` unset and stdin closed: `ci-list`, `ci-job JOB=contracts`, `ci-dryrun`
   (every leg) and the whole pipeline, 11 of 11 jobs green. `ci-dryrun` already referenced
   `$(ACT_RUNNER)`, which this Makefile never defined.
-- [todo] **A stale `dist/` fails `verify-install` under act.** act binds the working tree,
+- [done] **A stale `dist/` fails `verify-install` under act.** act binds the working tree,
   so a wheel left by any earlier build makes the job's "exactly one wheel" guard find
   several. That happened today (6 wheels, 0.0.2.dev4 to 0.0.3.dev16), and each run leaves a
   new one behind, so the next `make ci` after a commit fails the same way until
   `rm -rf dist`. The guard is right. Whether `make ci` should clear `dist/` first is a
   choice, because it deletes build output someone may want; not made.
+- [done] **Nothing a CI job writes lands in the working tree any more.** Clearing `dist/` from
+  `make ci` was the wrong fix: act's containers run as root, so `dist/` was root-owned and
+  `rm` failed. Restructured instead. `verify-install` and `tools/check_namespace_coexistence.py`
+  build into `/tmp`, and the `test` job sets `COVERAGE_FILE` under `/tmp`. The last of these
+  was a second, intermittent defect: four legs corrupted one shared `.coverage`
+  ("no such table: meta"), so a full `make ci` failed or passed at random. Two consecutive
+  full replays: 11 of 11 green, and no root-owned file in the tree. The root-owned `dist/`
+  and `.coverage` already there were removed through a container.
