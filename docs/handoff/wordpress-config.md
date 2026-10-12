@@ -358,3 +358,12 @@ all. Shawn chose a traceability table instead.
 - [blocked] **ADR-0013** says `make ci` runs act under `infisical run`; this repo's
   `Makefile` uses placeholders instead. That is the same spot where `make ci-job` now fails
   outside a TTY (see step 1's entry), so the ADR's mechanism may also be the fix.
+- Relayed the five document problems to `l3io-wordpress-database-24`, at Shawn's direction,
+  for the backup session. No backup session was open, so database put them to Shawn directly.
+  Its answers:
+  - AD-30 is cited in database too, in 7 places, so whatever backup decides applies to both.
+  - [todo] **database's `make ci` does not have the TTY failure.** Its Makefile wraps act
+    in `infisical run ... --env prod`, which is ADR-0013's mechanism and puts `GITHUB_TOKEN`
+    in the environment. Config's placeholder approach is the outlier, so the likely fix
+    for config's `make ci-job` is to align with database's wrapper rather than amend the
+    ADR. Not done.
