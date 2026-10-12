@@ -84,10 +84,17 @@ check: lint types contracts namespace-check test ## Everything CI's static/contr
 build: ## Build wheel + sdist
 	$(UV) build --no-sources
 
-verify-wheel: build ## Install the built wheel into a clean environment and import it
+# Builds its own wheel into a temporary directory and asserts there is exactly
+# one, rather than taking the newest from dist/: a wheel chosen by mtime or sort
+# order from a shared directory can be a stale one, and the check then passes
+# over a defect in the wheel just built.
+verify-wheel: ## Build a wheel, install it into a clean environment and import it
 	@set -eu; \
-	wheel=$$(ls -t dist/*.whl | head -1); \
-	$(UV) run --isolated --no-project --with "$$wheel" \
+	tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+	$(UV) build --no-sources --wheel --out-dir "$$tmp" >/dev/null; \
+	set -- "$$tmp"/*.whl; \
+	[ $$# -eq 1 ] && [ -f "$$1" ] || { echo "expected exactly one wheel, built: $$*"; exit 1; }; \
+	$(UV) run --isolated --no-project --with "$$1" \
 	  python -c "from l3io.wp import config; print('import ok', sorted(config.__all__))"
 
 # ---- local CI replay -------------------------------------------------------
