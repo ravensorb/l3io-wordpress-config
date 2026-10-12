@@ -146,3 +146,79 @@ def test_env_act_is_found_wherever_it_is_parsed() -> None:
     hits = env_act_uses(workflow)
     assert len(hits) == 2, hits
     assert not env_act_uses({"if": "vars.LOCAL_ACT"})
+
+
+# ---- floating version tags ----------------------------------------------------
+#
+# release.yml maintains floating `v<major>` and `v<major>.<minor>` tags. They must
+# never start a publish, never be read as the latest release, and must move only
+# once the real tag exists and before publish.yml is handed it.
+
+FLOATING = ["v0", "v0.0", "v1", "v1.2"]
+RELEASES = ["v0.0.2", "v0.1.0", "v1.2.3"]
+
+
+def tag_triggers(workflow: dict[Any, Any]) -> list[str]:
+    # PyYAML (YAML 1.1) parses the key `on` as the boolean True.
+    on = workflow.get("on", workflow.get(True)) or {}
+    return list(((on.get("push") or {}) if isinstance(on, dict) else {}).get("tags", []))
+
+
+def starts_a_run(tag: str, patterns: list[str]) -> bool:
+    """GitHub's tag filter: the last matching pattern wins, `!` negates."""
+    from fnmatch import fnmatchcase
+
+    hit = False
+    for pattern in patterns:
+        negated = pattern.startswith("!")
+        if fnmatchcase(tag, pattern.removeprefix("!")):
+            hit = not negated
+    return hit
+
+
+@pytest.mark.parametrize("path", _workflows(), ids=lambda p: p.name)
+def test_no_floating_tag_starts_a_workflow(path: Path) -> None:
+    patterns = tag_triggers(_load(path))
+    started = [t for t in FLOATING if starts_a_run(t, patterns)]
+    assert not started, f"{path.name} runs on floating tag(s) {started}: {patterns}"
+
+
+def test_a_release_tag_still_starts_publish() -> None:
+    patterns = tag_triggers(_load(WORKFLOWS / "publish.yml"))
+    assert patterns, "publish.yml has no tag trigger -- the check above is vacuous"
+    assert all(starts_a_run(t, patterns) for t in RELEASES), patterns
+    assert not starts_a_run("v0.0.0", patterns), "v0.0.0 is the baseline, never a release"
+
+
+def _release_steps() -> list[dict[str, Any]]:
+    steps: list[dict[str, Any]] = []
+    for job in (_load(WORKFLOWS / "release.yml").get("jobs") or {}).values():
+        steps += job.get("steps", [])
+    return steps
+
+
+def _index(steps: list[dict[str, Any]], action: str) -> int:
+    found = [i for i, s in enumerate(steps) if str(s.get("uses", "")).startswith(action)]
+    assert found, f"release.yml has no step using {action}"
+    return found[-1]
+
+
+def test_floating_tags_move_after_the_release_tag_and_before_the_dispatch() -> None:
+    steps = _release_steps()
+    created = _index(steps, "LiquidLogicLabs/git-action-tag-create-update")
+    floated = _index(steps, "LiquidLogicLabs/git-action-tag-floating-version")
+    dispatched = _index(steps, "LiquidLogicLabs/git-action-trigger-workflow")
+    assert created < floated < dispatched
+
+
+def test_the_latest_release_lookup_ignores_floating_tags() -> None:
+    steps = _release_steps()
+    lookup = steps[_index(steps, "LiquidLogicLabs/git-action-tag-info")]
+    assert lookup.get("with", {}).get("tag-format") == "v*.*.*"
+
+
+def test_the_tag_filter_check_reads_negation_and_order() -> None:
+    assert starts_a_run("v0.0.2", ["v*", "!v0.0.0"])
+    assert not starts_a_run("v0.0.0", ["v*", "!v0.0.0"])
+    assert starts_a_run("v0", ["v*"]), "a bare v* filter does start a run on a floating tag"
+    assert not starts_a_run("v0", ["v*.*.*"])

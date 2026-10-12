@@ -72,9 +72,10 @@ jobs:
         uses: LiquidLogicLabs/git-action-tag-info@v2
         with:
           tag-name: latest
-          # Three components only. The abandoned 2018 `v1.0` tag must never be
-          # read as the latest release -- pyproject's git_describe_command
-          # excludes it for the same reason, and the two must agree.
+          # Three components only. The floating `v<major>` and `v<major>.<minor>`
+          # tags moved below must never be read as the latest release --
+          # pyproject's git_describe_command excludes them for the same reason,
+          # and the two must agree.
           tag-format: "v*.*.*"
 
       - name: parse it into components
@@ -162,6 +163,19 @@ jobs:
           # the registry filename is spent.
           update-existing: 'false'
           force: 'false'
+
+      # Move v<major> and v<major>.<minor> onto the new release, as
+      # l3io-wordpress-backup does, so a consumer can follow a floating major.
+      # Runs AFTER the real tag exists, because the floating tags point at it,
+      # and before the dispatch, so anyone following v<major> sees the new
+      # release. Defaults: update-minor is on, and ignore-prerelease keeps a dev
+      # or rc tag from moving a floating tag. Created with GITHUB_TOKEN, so moving
+      # them fires no push event; publish.yml's tag filter ignores them anyway.
+      - name: move the floating major and minor tags
+        if: inputs.bump != 'dev'
+        uses: LiquidLogicLabs/git-action-tag-floating-version@v2
+        with:
+          tag: v${{ steps.next.outputs.version }}
 
       - name: hand the new tag to publish.yml
         # REQUIRED, not a convenience. GitHub does not trigger workflows from a ref

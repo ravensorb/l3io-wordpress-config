@@ -141,6 +141,7 @@ enforced_by = [
     ".github/workflows/ci.yml::verify-install::install the wheel into an isolated environment and import it",
     ".github/workflows/publish.yml::smoke::install, import, and agree on one version",
     "tests/test_workflow_gates.py::test_every_publishing_job_runs_only_from_dispatch",
+    "tests/test_workflow_gates.py::test_no_floating_tag_starts_a_workflow",
 ]
 not_checkable = "Release order across the three repositories and resolvability from PyPI are cross-repository facts; nothing in this repository can observe them. AD-15 is currently NOT satisfied -- nothing is on PyPI."
 

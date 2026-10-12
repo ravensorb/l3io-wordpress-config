@@ -61,7 +61,7 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **248 passing at ~94% coverage** (247 and 1 skipped without the sibling repo).
+- `uv sync --locked` then `uv run pytest`. Expect **255 passing at ~94% coverage** (254 and 1 skipped without the sibling repo).
   `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
   subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
   `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.
@@ -130,13 +130,13 @@ stop.
   `GITHUB_TOKEN`. Without the dispatch the tag sits unpublished while `release.yml`
   reports success. A tag pushed by hand from a terminal *does* fire the push event,
   which is why the missing dispatch is easy to miss.
-- **Floating tags (`git-action-tag-floating-version`) are not enabled here; doing so is
-  a choice, no longer a hazard.** Floating *minor* tags have the shape `vX.Y`. The only
-  reason not to enable them was two-component tags already on the remote, which would
-  have been silently repointed; none remain (`git ls-remote --tags origin`). Never push
-  a hand-made `vX.Y` tag: the floating action would move it, and
-  `pyproject.toml`'s describe match ignores it only for versioning.
-  `l3io-wordpress-backup` has floating tags enabled.
+- **`release.yml` maintains floating `v<major>` and `v<major>.<minor>` tags**, as
+  `l3io-wordpress-backup` does, using `git-action-tag-floating-version`. They move after
+  the release tag is created and before `publish.yml` is dispatched. Three things keep
+  them harmless, and `tests/test_workflow_gates.py` checks each: `publish.yml`'s push
+  filter is `v*.*.*`, so a floating tag never starts a publish (backup's is `v*`); the
+  latest-release lookup uses `tag-format: "v*.*.*"`; and `pyproject.toml`'s describe match
+  ignores them for versioning. Never push a hand-made `vX.Y` tag: the action owns them.
 - `publish.yml` is a separate file and act must never run it; `.actrc` pins act to
   `ci.yml`. act has no OIDC and ignores `job.permissions`, so an `if:` guard would
   not protect it.

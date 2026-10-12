@@ -25,7 +25,9 @@ on:
     # stopped only by the version-gate that existed at the commit it points at --
     # a tag runs the workflows AS OF ITS OWN COMMIT, not as of main. That is luck,
     # not a guard, so here is the guard.
-    tags: ['v*', '!v0.0.0']
+    # Three-component release tags only. release.yml also maintains floating
+    # `v<major>` / `v<major>.<minor>` tags; those must never start a publish.
+    tags: ['v*.*.*', '!v0.0.0']
   # A release cut from an EXISTING tag fires no `push: tags` event, so without this
   # "create a release" would silently not mirror. Duplicate fires are safe: the mirror
   # is idempotent (see publish-mirror's pre-check).

@@ -22,7 +22,7 @@ state tree is empty by design.
 - Remote refs: tags `v0.0.0` (version baseline) and `v0.0.2`; branches `main`,
   `legacy/pre-cleanup` and `legacy/upstream-2019`. Older tags, the `v0.0.1` release and
   `dev2` were retired on 2026-10-12; `LEGACY.md` on `legacy/pre-cleanup` lists them.
-- `main` is pushed and green on GitHub CI (11 of 11). 248 tests, 94.75% line coverage
+- `main` is pushed and green on GitHub CI (11 of 11). 255 tests, 94.75% line coverage
   against a floor of 94. Python 3.11–3.14 declared and tested.
 - `docs/traceability.toml` maps every governing rule to what enforces it. All gaps are
   closed.
@@ -39,9 +39,10 @@ state tree is empty by design.
 
 ## Open
 
-1. [blocked] **Floating version tags.** Their only obstacle, the retired `vX.Y` tags, was
-   removed on 2026-10-12 (backup bundle: `~/l3io-backups/l3io-wordpress-config-2026-10-12/`).
-   Enabling them would match `l3io-wordpress-backup`. Not done; it is Shawn's choice.
+1. [done] **Floating version tags enabled** (Shawn, 2026-10-12), matching backup. They take
+   effect on the next real release; none exist yet. Config narrowed `publish.yml`'s push
+   filter to `v*.*.*`. Backup's is still `v*`, which would start a publish on a hand-pushed
+   floating tag. That is backup's to adopt.
 2. [blocked] **Next release version.** `0.1.0` is suggested for the behaviour changes
    above. It is chosen when `release.yml` is dispatched.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
