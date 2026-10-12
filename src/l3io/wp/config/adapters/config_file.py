@@ -38,7 +38,10 @@ class WpConfigFile:
     """
 
     def __init__(self, filename: str | os.PathLike[str]) -> None:
-        self._path = Path(filename)
+        try:
+            self._path = Path(filename)
+        except TypeError as exc:
+            raise ConfigReadError(filename=repr(filename), reason=str(exc)) from exc
         self._config = WpConfigString(self._read())
 
     @property
@@ -105,7 +108,9 @@ class WpConfigFile:
             if problems:
                 raise ReadBackError(filename=str(self._path), mismatches=problems)
             tmp.replace(self._path)
-        except OSError as exc:
+        # ValueError is UnicodeEncodeError: a str can hold a lone surrogate that
+        # no UTF-8 file can.
+        except (OSError, ValueError) as exc:
             raise ConfigWriteError(filename=str(self._path), reason=str(exc), key=key) from exc
         finally:
             # Best-effort cleanup; the write already succeeded or already failed.
@@ -135,5 +140,7 @@ class WpConfigFile:
     def _read(self) -> str:
         try:
             return self._path.read_text(encoding="utf-8")
-        except OSError as exc:
+        # ValueError covers both a file that is not UTF-8 (UnicodeDecodeError) and
+        # a path carrying a NUL byte, which the OS layer rejects before any I/O.
+        except (OSError, ValueError) as exc:
             raise ConfigReadError(filename=str(self._path), reason=str(exc)) from exc

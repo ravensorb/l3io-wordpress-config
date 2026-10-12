@@ -11,12 +11,13 @@ limits and the read-back verification that guards them.
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from logging import getLogger
 from typing import Literal
 
-from l3io.wp.config.domain.errors import ConfigValueError, ConfigWriteError
+from l3io.wp.config.domain.errors import ConfigKeyError, ConfigValueError, ConfigWriteError
 from l3io.wp.config.domain.values import MISSING, ConfigValue, MissingType
 
 __all__ = [
@@ -62,6 +63,12 @@ _PATTERNS: tuple[tuple[Kind, re.Pattern[str]], ...] = (
 )
 
 _INT_RE = re.compile(r"^[+-]?\d+$")
+
+# What both a define() name and a variable name must be, so a written statement is
+# always valid PHP. define() itself accepts any string, but nothing WordPress
+# reads is named otherwise, and an unescapable quote or space in a key is a
+# syntax error that takes the site down.
+_IDENTIFIER_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _PHP_OPEN = "<?php\n"
 
 
@@ -137,6 +144,12 @@ def render_value(key: str, value: ConfigValue) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
+        # repr() gives `nan` and `inf`, which PHP 8 reads as undefined constants:
+        # a fatal error. Read-back cannot catch it -- `nan` round-trips.
+        if not math.isfinite(value):
+            raise ConfigValueError(
+                key=key, value_type="float", reason="there is no PHP literal for a non-finite float"
+            )
         return repr(value)
     if isinstance(value, str):
         escaped = value.replace("\\", "\\\\").replace("'", "\\'")
@@ -215,6 +228,10 @@ class WpConfigString:
         return MISSING
 
     def _set(self, kind: Kind, key: str, value: ConfigValue) -> bool:
+        if not (isinstance(key, str) and _IDENTIFIER_RE.fullmatch(key)):
+            raise ConfigKeyError(
+                key=repr(key), reason="not a PHP identifier ([A-Za-z_][A-Za-z0-9_]*)"
+            )
         # Render first, so an unrenderable value fails the same way on both paths.
         rendered = render_value(key, value)
 

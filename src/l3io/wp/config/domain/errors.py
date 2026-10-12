@@ -11,6 +11,7 @@ values are identified by key, never quoted back.
 from __future__ import annotations
 
 __all__ = [
+    "ConfigKeyError",
     "ConfigReadError",
     "ConfigValueError",
     "ConfigWriteError",
@@ -43,15 +44,29 @@ class ConfigWriteError(WpConfigError):
         super().__init__(f"Cannot write {filename!r}{where}: {reason}")
 
 
+class ConfigKeyError(WpConfigError):
+    """
+    A key is not a PHP identifier, so no statement naming it could be written.
+
+    ``key`` is the ``repr()`` of what was passed, since it may not be a ``str``.
+    """
+
+    def __init__(self, key: str, reason: str) -> None:
+        self.key = key
+        self.reason = reason
+        super().__init__(f"Cannot use {key} as a key: {reason}")
+
+
 class ConfigValueError(WpConfigError):
     """A value cannot be rendered as a PHP literal."""
 
-    def __init__(self, key: str, value_type: str) -> None:
+    def __init__(self, key: str, value_type: str, reason: str | None = None) -> None:
         self.key = key
         self.value_type = value_type
+        self.reason = reason or "supported types are str, bool, int and float"
+        # The value itself is never quoted: it may be a credential.
         super().__init__(
-            f"Cannot render a value of type {value_type!r} for key {key!r}; "
-            "supported types are str, bool, int and float"
+            f"Cannot render a value of type {value_type!r} for key {key!r}; {self.reason}"
         )
 
 

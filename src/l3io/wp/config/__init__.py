@@ -10,6 +10,7 @@ from l3io.wp.config._version import __version__
 from l3io.wp.config.adapters.config_file import WpConfigFile
 from l3io.wp.config.core.config_string import WpConfigString
 from l3io.wp.config.domain.errors import (
+    ConfigKeyError,
     ConfigReadError,
     ConfigValueError,
     ConfigWriteError,
@@ -21,6 +22,7 @@ from l3io.wp.config.domain.values import MISSING, ConfigValue, MissingType
 __all__ = [
     "__version__",
     "MISSING",
+    "ConfigKeyError",
     "ConfigReadError",
     "ConfigValue",
     "ConfigValueError",

@@ -34,6 +34,12 @@ Its scope is deliberately bounded, and the boundaries are these:
   returned as its raw source text, not evaluated.
 - Adding a constant inserts after the **first** `<?php` opening tag. A file with
   no `<?php\n` cannot have one inserted, and raises `ConfigWriteError`.
+- A key written by `set()` or `set_variable()` must be a **PHP identifier**
+  (`[A-Za-z_][A-Za-z0-9_]*`); anything else raises `ConfigKeyError` before the
+  content is touched.
+- `nan`, `inf` and `-inf` have no PHP literal and raise `ConfigValueError`. Written
+  as `repr()` gives them, PHP 8 would read them as undefined constants and fail on
+  every page load — and read-back cannot catch that, because they round-trip.
 
 Because those limits are real, **every write is verified**. `WpConfigFile.set()`
 writes to a temporary file, reads it back, and checks three things before
@@ -73,6 +79,7 @@ Every failure is a package-owned exception under `WpConfigError`; no `OSError`,
 |---|---|
 | `ConfigReadError` | the file cannot be read |
 | `ConfigWriteError` | the file cannot be written, or a constant cannot be placed |
+| `ConfigKeyError` | a key to write is not a PHP identifier |
 | `ConfigValueError` | a value cannot be rendered as a PHP literal |
 | `ReadBackError` | verification failed; the file is unchanged |
 

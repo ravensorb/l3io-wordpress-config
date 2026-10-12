@@ -2,7 +2,14 @@
 
 import pytest
 
-from l3io.wp.config import MISSING, ConfigValueError, ConfigWriteError, WpConfigString
+from l3io.wp.config import (
+    MISSING,
+    ConfigKeyError,
+    ConfigValueError,
+    ConfigWriteError,
+    WpConfigFile,
+    WpConfigString,
+)
 
 SOURCE = """<?php
 define('QUOTED',    'hello');
@@ -131,3 +138,54 @@ def test_a_define_sharing_a_line_with_the_php_tag_is_invisible():
     """
     config = WpConfigString("<?php define('A', 'a');\n")
     assert config.get("A") is MISSING
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")], ids=repr)
+@pytest.mark.parametrize("setter", ["set", "set_variable"])
+def test_a_non_finite_float_is_refused_on_both_paths(value, setter):
+    """
+    PHP has no literal for these. `repr()` renders `nan` and `inf`, which PHP 8
+    reads as undefined constants -- a fatal error on every page load. Read-back
+    cannot catch it: it re-parses with the same rules that wrote it, and `nan`
+    round-trips through `float()` perfectly.
+    """
+    for content in ("<?php\ndefine('X', 1.5);\n$X = 1.5;\n", "<?php\n"):
+        config = WpConfigString(content)
+        with pytest.raises(ConfigValueError, match="no PHP literal"):
+            getattr(config, setter)("X", value)
+        assert config.content == content
+
+
+def test_a_non_finite_float_never_reaches_the_file(tmp_path):
+    path = tmp_path / "wp-config.php"
+    path.write_text("<?php\ndefine('X', 1.5);\n", encoding="utf-8")
+    with pytest.raises(ConfigValueError):
+        WpConfigFile(path).set("X", float("nan"))
+    assert path.read_text(encoding="utf-8") == "<?php\ndefine('X', 1.5);\n"
+
+
+@pytest.mark.parametrize(
+    "key",
+    [None, 1, b"DB_NAME", ["DB_NAME"], "", "A'B", "a b", "1A", "X\nY", "DB-NAME", "$X"],
+    ids=repr,
+)
+@pytest.mark.parametrize("setter", ["set", "set_variable"])
+def test_an_invalid_key_is_refused_before_anything_is_written(key, setter):
+    """
+    Only a PHP identifier is accepted. `define('A'B', ...)` and `$a b = ...` are
+    syntax errors that take a site down; a non-str key used to be written as
+    `define('None', ...)`.
+    """
+    content = "<?php\ndefine('X', 'a');\n"
+    config = WpConfigString(content)
+    with pytest.raises(ConfigKeyError) as caught:
+        getattr(config, setter)(key, "value")
+    assert caught.value.key == repr(key)
+    assert config.content == content
+
+
+@pytest.mark.parametrize("key", ["DB_NAME", "_X", "a1", "table_prefix", "WP_DEBUG"])
+def test_a_php_identifier_is_accepted(key):
+    config = WpConfigString("<?php\n")
+    assert config.set(key, "v") is True
+    assert config.get(key) == "v"
