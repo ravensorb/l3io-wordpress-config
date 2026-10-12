@@ -62,12 +62,18 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **101 passing at ~92% coverage**.
+- `uv sync --locked` then `uv run pytest`. Expect **123 passing at ~92% coverage** (122 and 1 skipped without the sibling repo).
   `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
   subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
   `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.
 - **Do not run `uv self update`.** `[tool.uv] required-version` pins `==0.11.6` to
   match CI; a different uv writes a lock CI rejects. Change both together or neither.
+- `docs/traceability.toml` maps every governing rule (each AD-n and ADR in
+  `../l3io-wordpress-backup`) to what enforces it here, or states the gap.
+  `tests/test_traceability.py` checks every named enforcer exists (everywhere) and that
+  the table matches the sibling's **committed** rules (only where the sibling is checked
+  out — CI reports it *skipped*). When a rule's text changes the test prints the new
+  `source_sha256`: re-judge the row before pasting it, or the check proves nothing.
 - `make check` runs lint, types, contracts and tests — everything CI's static,
   contracts and test jobs run. `make ci` replays the whole pipeline locally under
   nektos/act; `make ci-job JOB=<id>` replays one.

@@ -1,0 +1,349 @@
+# Every governing rule, and what enforces it in this repository.
+#
+# Checked by tests/test_traceability.py, whose docstring states what it does and
+# does not prove. One row per rule in ../l3io-wordpress-backup -- every AD-n in
+# ARCHITECTURE-SPINE.md and every docs/adr/NNNN-*.md -- including those that do
+# not bind this package, so that judgement is on a reviewed row.
+#
+#   binds = true   needs at least one of:
+#     enforced_by    tests/x.py::name | tests/x.py::Class::name
+#                    .github/workflows/x.yml::job-id::step name | a repo path
+#     untested       checkable, but nothing checks it yet -- a gap, stated
+#     not_checkable  prose only, and why
+#   binds = false  needs a reason, and none of the three above
+#   note           optional, either way
+#
+# source_sha256 is the hash of the rule's text when this row was last judged.
+# When the governing text changes, the local test fails and prints the new hash:
+# re-read the rule, re-judge the row, and only then paste the hash in. Pasting it
+# without re-reading defeats the check.
+#
+# Reviewed 2026-10-12 against l3io-wordpress-backup@0431282.
+
+# ---- ARCHITECTURE-SPINE.md ---------------------------------------------------
+
+[[rule]]
+id = "AD-1"
+source_sha256 = "89f262d109f70e51f42bbd1e51ef2a898bdf231b76935046a21ce04df20b49ec"
+binds = true
+enforced_by = [
+    "tests/test_architecture.py::test_the_functional_core_imports_no_outward_layer",
+    "tests/test_architecture.py::test_the_functional_core_performs_no_io",
+    "tests/test_file_adapter.py::test_composition_not_inheritance",
+    ".github/workflows/ci.yml::contracts::architecture contracts",
+]
+note = "Enforced by AST tests rather than the import-linter contract the rule names; same reach, plus builtins."
+
+[[rule]]
+id = "AD-2"
+source_sha256 = "62147324326a0ada61fe52d652c30d2f39b73f02cf5076f01d6a53a11de32bd7"
+binds = true
+enforced_by = [
+    "tests/test_architecture.py::test_the_package_declares_no_runtime_dependencies",
+    ".github/workflows/ci.yml::contracts::AD-2 zero runtime dependencies",
+    ".github/workflows/ci.yml::verify-install::the installed tree ships no namespace marker and pulls nothing",
+]
+
+[[rule]]
+id = "AD-3"
+source_sha256 = "45c156abd88b4dfbdd548c19416c92907575fd4b7c3241b11de9163b241a7dbf"
+binds = false
+reason = "Binds the Site Descriptor and its consumers in database and backup. This package is the source they parse, not a consumer."
+
+[[rule]]
+id = "AD-4"
+source_sha256 = "aaa6f8c56642e895485eaf645be42443eb7a82f21a825bacd2dfc4048343610f"
+binds = true
+untested = "No grep gate for dry_run/what_if outside a composition root. It would pass today -- this package has no Dry Run surface -- and would catch one being added inside core/ or adapters/."
+note = "Binds 'every adapter'. The query/command port split is moot here: WpConfigSource has no Dry Run counterpart."
+
+[[rule]]
+id = "AD-5"
+source_sha256 = "54062a94bf45f5c86a4e25bb0b218532a3edaedb9188311baaf491188f9f7a37"
+binds = false
+reason = "Restore Mode belongs to backup."
+
+[[rule]]
+id = "AD-6"
+source_sha256 = "6953ac82bc177624a3d40d25e8a5346b13d2b2aa5a16c5e12895c8dae4fd0e03"
+binds = false
+reason = "Archive format belongs to backup."
+
+[[rule]]
+id = "AD-7"
+source_sha256 = "dd86537da9a5ba3cd96ed3ffcf21443d4dedad60207be52302e892823d15acca"
+binds = false
+reason = "Credential transport to MySQL clients and drivers. This package starts no subprocess and opens no connection; credential-free error text is AD-14's row."
+
+[[rule]]
+id = "AD-8"
+source_sha256 = "e1be064b61c0b82941b6c141df14ca603927791a0d54eac9638bf65f4d65e312"
+binds = false
+reason = "Optional dependencies. This package has none and may never have any (AD-2)."
+
+[[rule]]
+id = "AD-9"
+source_sha256 = "34f8a1da34a9fabbb4900d52951788c5893a6b67d9d9e0f1b47db19e96600cc7"
+binds = false
+reason = "Credential providers belong to database."
+
+[[rule]]
+id = "AD-10"
+source_sha256 = "e8b54c72cd5fe968ec5e5162d6a9c25560a9bf8205b868cd21ada37150a10e8c"
+binds = true
+untested = "Nothing asserts that library modules only call logging.getLogger(__name__) and that only cli/ configures logging (cli/main.py calls basicConfig, which is the composition root's right). An AST test over src/ would catch a handler or basicConfig added below cli/."
+note = "The rule carves this package out of structlog explicitly. That half is held by AD-2's zero-dependency checks."
+
+[[rule]]
+id = "AD-11"
+source_sha256 = "140bfef22d446ae7546e57bf39a79102055c144532f46f1f42bbd344b28a0d83"
+binds = false
+reason = "Archive extraction belongs to backup."
+
+[[rule]]
+id = "AD-12"
+source_sha256 = "46847d25cadef61d9eb2314aad5ec9b4afe34ee2193e011b4c662c400a13aa49"
+binds = false
+reason = "Run workspace and Safety Snapshot belong to backup."
+
+[[rule]]
+id = "AD-13"
+source_sha256 = "90e55c93958c0638a28fe729db6a60ce240b557b3df740bb565b9bb677e5fe2f"
+binds = false
+reason = "External binaries. This package invokes none."
+
+[[rule]]
+id = "AD-14"
+source_sha256 = "b8f26a5c86be1b33aea568faf2055733788f4dcad5f1ccc4e5a6f677bb47bbc4"
+binds = true
+enforced_by = [
+    "tests/test_file_adapter.py::test_a_missing_file_raises_a_package_owned_error",
+    "tests/test_file_adapter.py::test_errors_carry_structured_fields",
+    "tests/test_file_adapter.py::test_every_public_error_descends_from_one_base",
+    "tests/test_verification.py::test_problem_text_never_quotes_a_value",
+]
+untested = "Only the file-adapter paths are exercised. Nothing derives the set of public entry points and asserts none lets OSError, TypeError or ValueError escape."
+
+[[rule]]
+id = "AD-15"
+source_sha256 = "880ff532f1d203abb565244dd2687f9cdfdb1db5cb99b79ac0991ade660fffe3"
+binds = true
+enforced_by = [
+    ".github/workflows/ci.yml::verify-install::install the wheel into an isolated environment and import it",
+    ".github/workflows/publish.yml::smoke::install, import, and agree on one version",
+]
+untested = "That publish-pypi is unreachable from a tag lives only in its job-level if: -- no test reads it."
+not_checkable = "Release order across the three repositories and resolvability from PyPI are cross-repository facts; nothing in this repository can observe them. AD-15 is currently NOT satisfied -- nothing is on PyPI."
+
+[[rule]]
+id = "AD-16"
+source_sha256 = "8b0d5fb04acb8fe751bb13e44d13b56d5bc3cfbf982c4a6c8d7ab866991f5217"
+binds = false
+reason = "Run Context belongs to backup's composition roots."
+
+[[rule]]
+id = "AD-17"
+source_sha256 = "7a30c9f9f2d12a6a40ea2feec4bced0b5e7f5f8186c47961330727665f930106"
+binds = false
+reason = "Restore phase order belongs to backup."
+
+[[rule]]
+id = "AD-18"
+source_sha256 = "cd417a250d2f700dec4d165b24d197368c99d793daade18cfeef01bb3346d79e"
+binds = true
+enforced_by = [
+    "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
+    "tests/test_file_adapter.py::test_no_temporary_file_is_left_behind",
+]
+note = "Only requirement 2, the atomic config write, which backup delegates to this package. Journal and staging cutover are backup's."
+
+[[rule]]
+id = "AD-19"
+source_sha256 = "652b138d9d1043cb8e03553c4a138dd08fb3e750c92ffa8adbc1f2569546ea50"
+binds = false
+reason = "Site Lock belongs to backup."
+
+[[rule]]
+id = "AD-20"
+source_sha256 = "faef6f587d86dcc730de8381c802dbc2e12bd6084edf966fb2918343f9e45b2a"
+binds = false
+reason = "Archive visibility belongs to backup."
+
+[[rule]]
+id = "AD-21"
+source_sha256 = "1c50cc37de35ee936edef3c6b4acd198406e1a3bc33024c69d24ff34b0d80efd"
+binds = false
+reason = "Archive streaming belongs to backup."
+
+[[rule]]
+id = "AD-22"
+source_sha256 = "6f2939f7a95f38a2ceea10ff2c0365a3e9ce242425a240621b4257ee0fd2d908"
+binds = false
+reason = "Freezes wpbackup2's CLI as shipped at v0.2.21, and names no other CLI. This package's console-script naming is ADR-0007's row."
+
+[[rule]]
+id = "AD-23"
+source_sha256 = "03117f5bd88e6cbc351d75f565733c156b263e8ae4e99605e5a30d0891917cb8"
+binds = false
+reason = "Archive format detection belongs to backup."
+
+[[rule]]
+id = "AD-24"
+source_sha256 = "658baffffbab14d7f021cc8a56300736ed615aaaf5278400ecff65b1fee8611e"
+binds = false
+reason = "Its Binds line says 'all three packages', but AD-2 forbids this package the opentelemetry-api dependency AD-24 requires. AD-10 carves this package out of structlog explicitly; AD-24 has no matching carve-out. Judged non-binding by AD-2's precedence -- a documents conflict, reported, not resolved here."
+
+[[rule]]
+id = "AD-25"
+source_sha256 = "6c086a917b81411c89cc01f4f51340fc27fa842c4d8dcb7340e891a6e0f8e737"
+binds = false
+reason = "Flag-to-Restore-Mode mapping belongs to backup."
+
+[[rule]]
+id = "AD-26"
+source_sha256 = "ed7b8b1f11783d961a196b69a2ed4942a83b6fec3d1aff120965334b7329c723"
+binds = false
+reason = "Passphrase resolution belongs to backup."
+
+[[rule]]
+id = "AD-27"
+source_sha256 = "960616c68117de8ac4bf791e45557707bdab139689bc6f175e774ea6d343c0f9"
+binds = true
+enforced_by = [
+    "tests/test_architecture.py::test_no_init_marker_at_either_namespace_level",
+    "tests/test_architecture.py::test_the_only_init_files_live_at_or_below_the_area_package",
+    ".github/workflows/ci.yml::contracts::AD-27 no namespace marker files",
+    ".github/workflows/ci.yml::namespace::stub sibling, both install shapes",
+    ".github/workflows/ci.yml::verify-install::the installed tree ships no namespace marker and pulls nothing",
+    ".github/workflows/publish.yml::namespace::this distribution ships no namespace marker",
+    "tools/check_namespace_coexistence.py",
+]
+
+[[rule]]
+id = "AD-28"
+source_sha256 = "8db19e9589f713fc31d55aa40aaaba6735bd1110e2c15d27b30fb08d3d0e61a7"
+binds = false
+reason = "GRANT escaping belongs to database."
+
+[[rule]]
+id = "AD-29"
+source_sha256 = "b2870579f1832940fad9b0f62b79ddaf42fd02a9052720bf7f18171177e990f6"
+binds = false
+reason = "Provisioning existence checks belong to database and backup."
+
+# ---- docs/adr/ ---------------------------------------------------------------
+
+[[rule]]
+id = "ADR-0001"
+source_sha256 = "38f089e975547cee8797792b05177366ee20a0d86e74711a886c42eec312859b"
+binds = true
+enforced_by = [
+    "tests/test_architecture.py::test_the_functional_core_imports_no_outward_layer",
+    "tests/test_architecture.py::test_the_functional_core_performs_no_io",
+]
+note = "The decision AD-1 states as a rule; see AD-1's row."
+
+[[rule]]
+id = "ADR-0002"
+source_sha256 = "b148fe707f6eea83f13a3d7cf7f760cb0d25348d97efdf011669e99a8d5f82ea"
+binds = false
+reason = "Superseded by ADR-0012."
+
+[[rule]]
+id = "ADR-0003"
+source_sha256 = "4e6efa156a2f8c347c1e66b322bb4f5e9142c26331b38d281f72bc44e67e1251"
+binds = false
+reason = "MySQL credential transport; see AD-7's row."
+
+[[rule]]
+id = "ADR-0004"
+source_sha256 = "4f4912f5ce26b9a23781c7e6782310c5a67dc703ff4f7324540dddf316fb6abe"
+binds = false
+reason = "MySQL driver choice belongs to database."
+
+[[rule]]
+id = "ADR-0005"
+source_sha256 = "6562f306399380cf74aa84c9139c7ad27904d01e28199da58419249ec3d65852"
+binds = false
+reason = "WP-CLI relocation belongs to backup."
+
+[[rule]]
+id = "ADR-0006"
+source_sha256 = "c1e401318da0907c7dea3eac0bced2783743ffbf9d7baa49fc57434413e4c01e"
+binds = false
+reason = "Archive encryption belongs to backup."
+
+[[rule]]
+id = "ADR-0007"
+source_sha256 = "62fd5c1a0e4be6d5eae90eba6fd988277a28d60924811990de4a510c78e5f02e"
+binds = true
+enforced_by = [
+    ".github/workflows/publish.yml::namespace::dependency metadata is clean in BOTH artifacts",
+    ".github/workflows/publish.yml::smoke::install, import, and agree on one version",
+    ".github/workflows/ci.yml::verify-install::install the wheel into an isolated environment and import it",
+]
+untested = "Nothing asserts the console script is declared, named for the distribution, and runnable alongside python -m l3io.wp.config. CI's `uv sync --locked` is an unnamed step, so it holds by being run, not by being checked."
+note = "Its Console scripts section names the script `l3io-wp-config`; the distribution was renamed and the script with it (`l3io-wordpress-config`). The ADR text was not updated -- reported, not resolved here."
+
+[[rule]]
+id = "ADR-0008"
+source_sha256 = "aec1fbce814820f1adaadb063c6933a09eb670233185906c0fcea54fb794e76c"
+binds = false
+reason = "boto3 extra belongs to database."
+
+[[rule]]
+id = "ADR-0009"
+source_sha256 = "a8ac4705f7a13f88c93dde95f213fcab79e6c93c05a10251154a4c9618c9a187"
+binds = true
+untested = "Nothing asserts requires-python >= 3.11 or that the CI matrices cover every version in the range. database's tests/test_declared_facts.py (FR-48) is the family shape for this, not yet ported: here the matrices run 3.11-3.14 while the classifiers stop at 3.13."
+
+[[rule]]
+id = "ADR-0010"
+source_sha256 = "b99530de450fe514964b1a0a20d365a75f880a24f170a823c03ae77333c81f2c"
+binds = true
+enforced_by = [
+    "tests/test_parser_scope.py::test_type_fidelity",
+    "tests/test_parser_scope.py::test_double_quoted_is_returned_as_raw_text",
+    "tests/test_parser_scope.py::test_php_expression_is_returned_as_raw_text",
+    "tests/test_parser_scope.py::test_variable_assignment_is_read",
+    "tests/test_parser_scope.py::test_insertion_happens_once_even_with_two_php_markers",
+    "tests/test_parser_scope.py::test_unrenderable_value_fails_identically_whether_the_key_exists",
+    "tests/test_parser_scope.py::test_setting_an_int_works_on_both_paths",
+    "tests/test_parser_scope.py::test_a_file_with_no_php_newline_raises_rather_than_silently_skipping",
+    "tests/test_verification.py::test_detects_a_neighbour_swallowed_on_the_same_line",
+    "tests/test_verification.py::test_detects_a_neighbour_altered_rather_than_removed",
+    "tests/test_verification.py::test_detects_a_duplicate_key",
+    "tests/test_verification.py::test_detects_a_value_that_did_not_round_trip",
+    "tests/test_verification.py::test_wordpress_own_spacing_is_not_a_mismatch",
+    "tests/test_cli.py::test_a_falsy_value_and_an_absent_key_differ_in_exit_code",
+    "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
+]
+not_checkable = "The 'Revisit when' conditions -- a read-back failure on a file WordPress itself wrote, or a maintained round-tripping PHP-constant library appearing -- are events in the world, not properties of this code."
+
+[[rule]]
+id = "ADR-0011"
+source_sha256 = "0d827b4a2602b5a15b73f3e1bb0a4de2ec1b451db49cc8ab3dc288e492e4b2d5"
+binds = false
+reason = "Its structlog and opentelemetry-api decisions reach this package only through AD-10 (which carves it out) and AD-24 (see that row). Nothing in it binds a zero-dependency package directly."
+
+[[rule]]
+id = "ADR-0012"
+source_sha256 = "928435c5da30bda8aff0432acd6424fde553764504336254d716ac94387b445a"
+binds = true
+enforced_by = [
+    "tests/test_architecture.py::test_no_init_marker_at_either_namespace_level",
+    ".github/workflows/ci.yml::namespace::stub sibling, both install shapes",
+]
+not_checkable = "The distribution-name pattern and namespace root are checked cross-repository by ../l3io-wordpress-backup/scripts/check-cicd-alignment.py, which this repository cannot run in its own CI."
+note = "Its decision text says the fork republishes at 'a version above 1.4'; the family restarted at 0.0.1 under new names, which removed that constraint's premise. The ADR text was not updated -- reported, not resolved here."
+
+[[rule]]
+id = "ADR-0013"
+source_sha256 = "628f613a5cb3808c2bb854aae86bed280810c5f246b9ccb2c15289c61661a11c"
+binds = true
+enforced_by = [
+    "tests/test_act_dryrun_legs.py::test_every_declared_trigger_has_a_leg",
+    "tests/test_act_dryrun_legs.py::test_every_workflow_outside_make_ci_has_at_least_one_leg",
+]
+untested = "Nothing asserts that no workflow gates on env.ACT rather than vars.LOCAL_ACT."
+note = "It says `make ci` runs act under `infisical run`. This repository's Makefile instead passes placeholders, because ci.yml uses no secrets -- a deliberate departure recorded in the Makefile, not in the ADR."

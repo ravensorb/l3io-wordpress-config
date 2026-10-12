@@ -319,3 +319,42 @@ classifier this session, so the 2026-10-03 registry list stands as recorded, unc
   variable exported. Workaround that worked: `GITHUB_TOKEN="$(gh auth token)" make ci-job
   JOB=...`. Not fixed — whether the `Makefile` should supply it is a design change, and the
   comment is wrong either way.
+
+### Brief step 2 — replaced: traceability instead of a spec index (2026-10-12)
+
+The brief's step 2 rested on a wrong premise, which this file stated as fact: that a spec
+index would let CI check the code against the ADRs. It would not. `spec-align.py build`
+produces a table of contents of planning-doc headings for l3io-execute's story `Spec:`
+pointers; with no stories here it checks nothing, and `ci.yml` never ran a spec check at
+all. Shawn chose a traceability table instead.
+
+- [done] `docs/traceability.toml` — one row per governing rule, all 42 (AD-1..29, ADR-0001..0013),
+  each judged binds/doesn't against the text at backup `0431282`; `tests/test_traceability.py`
+  checks it. Planted violations (renamed enforcer, edited rule, removed row, binding row with
+  no coverage) each fail; a worktree with no sibling reports the drift test *skipped*; act
+  replays `static` and all four `test` legs green.
+- 14 rules bind this package. **Gaps the audit found, stated in their rows as `untested`:**
+  - [todo] AD-4 — no `dry_run`/`what_if` grep gate.
+  - [todo] AD-10 — nothing asserts only `cli/` configures logging.
+  - [todo] AD-14 — only file-adapter paths checked; public entry points not derived.
+  - [todo] AD-15 — `publish-pypi`'s never-from-a-tag `if:` is unchecked.
+  - [todo] ADR-0007 — console script + `python -m` untested.
+  - [todo] ADR-0009 — Python floor and matrix coverage untested; this is FR-48, whose family
+    shape is `l3io-wordpress-database`'s `tests/test_declared_facts.py`, blocked here on 3.14.
+    Note ADR-0009 says the matrix covers "every version in the range", and `>=3.11` is
+    open-ended — that reads in favour of *adding* the 3.14 classifier. Still Shawn's call.
+  - [todo] ADR-0013 — no check that workflows never gate on `env.ACT`.
+
+**Problems in the authoritative documents** — reported, not resolved; they live in
+`l3io-wordpress-backup` and are not this session's to edit:
+- [blocked] **AD-30 does not exist.** This repo's `AGENTS.md` and `tests/test_package_version.py`
+  cite "AD-30 — the git tag is the version"; the spine stops at AD-29 and no ADR records it.
+  It appears only in comments in backup's `Makefile` and `release.yml`. Not a table row.
+- [blocked] **AD-24 vs AD-2.** AD-24 binds "all three packages" to `opentelemetry-api`; AD-2
+  forbids this package any dependency. AD-10 carves this package out of structlog; AD-24 has no
+  matching carve-out. Judged non-binding by AD-2's precedence.
+- [blocked] **ADR-0007** still names the console script `l3io-wp-config`.
+- [blocked] **ADR-0012** still says the fork republishes at "a version above 1.4".
+- [blocked] **ADR-0013** says `make ci` runs act under `infisical run`; this repo's
+  `Makefile` uses placeholders instead. That is the same spot where `make ci-job` now fails
+  outside a TTY (see step 1's entry), so the ADR's mechanism may also be the fix.
