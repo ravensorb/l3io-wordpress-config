@@ -110,11 +110,17 @@ def check(label: str, env_root: Path, *install: str) -> bool:
 
 
 def main() -> int:
-    run("uv", "build", "--no-sources", cwd=REPO)
-    mine = max((REPO / "dist").glob("*.whl"), key=lambda p: p.stat().st_mtime)
-
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
+        # Built into the temp directory, never the repo's dist/: under act that
+        # dist/ is the host's, root-owned once a container writes it, and any
+        # stale wheel there made "the newest one" a guess about mtimes.
+        run("uv", "build", "--no-sources", "--wheel", "--out-dir", str(root / "mine"), cwd=REPO)
+        wheels = list((root / "mine").glob("*.whl"))
+        if len(wheels) != 1:
+            print(f"expected exactly one wheel of this package, built {wheels}")
+            return 1
+        mine = wheels[0]
         stub = build_stub(root / "stub")
 
         held = [
