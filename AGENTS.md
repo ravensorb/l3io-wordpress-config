@@ -73,6 +73,10 @@ stop.
   the table matches the sibling's **committed** rules (only where the sibling is checked
   out — CI reports it *skipped*). When a rule's text changes the test prints the new
   `source_sha256`: re-judge the row before pasting it, or the check proves nothing.
+- `make audit` runs `uv audit` over `uv.lock` (network; not part of `make check`). On
+  GitHub, `security-audit.yml` runs it on push, PR, weekly and on dispatch, because
+  advisories arrive without commits. With no runtime dependencies, what it guards is the
+  dev toolchain; a planted dev-only vulnerable pin fails it, so it is not vacuous.
 - `make check` runs lint, types, contracts and tests — everything CI's static,
   contracts and test jobs run. `make ci` replays the whole pipeline locally under
   nektos/act; `make ci-job JOB=<id>` replays one.

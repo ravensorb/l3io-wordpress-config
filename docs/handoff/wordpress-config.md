@@ -58,10 +58,10 @@ state tree is empty by design.
    by PHP) as a local-only test, skipped without docker. It is the only grader
    independent of the scanner.
 7. [todo] The Gitea registry contents have not been re-read since 2026-10-03.
-8. [todo] **Port FR-45, the security-audit workflow, from database's `cc107fb`.**
-   Database's handoff records that config will port it as-is. It runs
-   `uv audit --locked --preview-features audit` on push, PR, a weekly cron and dispatch,
-   with `make audit` and dry-run legs for its triggers. Not done yet.
+8. [done] **FR-45 ported** from database's `cc107fb`, plus `make audit` from `0c4e3cf`:
+   `.github/workflows/security-audit.yml`, unchanged except its header. Proved not vacuous
+   with a planted dev-only `urllib3==1.26.4` (22 advisories, exit 1). All four triggers
+   dry-run clean, and the job passes for real under act.
 
 ## Sent to `l3io-wordpress-database`
 

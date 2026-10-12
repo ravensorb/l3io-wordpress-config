@@ -16,6 +16,7 @@
 #   make test         pytest
 #   make contracts    the architecture gates (AD-27, AD-1, AD-2)
 #   make check        lint + types + contracts + test, the whole local gate
+#   make audit        uv audit over uv.lock (network; not part of check)
 #   make ci           replay the whole CI pipeline locally via act
 #   make ci-job JOB=  replay one job, e.g. make ci-job JOB=contracts
 #   make ci-dryrun    parse and plan the workflow without running it
@@ -45,7 +46,7 @@ INFISICAL_ENV ?= prod
 ACT_RUNNER ?= $(INFISICAL) run --projectId $(INFISICAL_PROJECT) --env $(INFISICAL_ENV) --
 ACT ?= act
 
-.PHONY: help act-init lint format types test contracts namespace-check check ci ci-job ci-dryrun ci-dryrun-one ci-list build verify-wheel clean
+.PHONY: help act-init lint format types test contracts namespace-check check audit ci ci-job ci-dryrun ci-dryrun-one ci-list build verify-wheel clean
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -80,6 +81,9 @@ test: ## Run the test suite
 	$(UV) run pytest -q
 
 check: lint types contracts namespace-check test ## Everything CI's static/contracts/test jobs run
+
+audit: ## Scan uv.lock for known vulnerabilities (needs network; not part of check)
+	$(UV) audit --locked --preview-features audit
 
 build: ## Build wheel + sdist
 	$(UV) build --no-sources
