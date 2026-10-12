@@ -457,10 +457,8 @@ or reopen the ADR. He chose the fix.
 ## Session close — 2026-10-12: state at handoff
 
 The hardening brief's steps 1–3 are done. Step 4 (the `[blocked]` decisions) was not
-reached; every one is still open and still Shawn's. **Nothing is pushed:** `main` is ahead
-of `origin/main` by every commit of this session (`git log origin/main..main`), and the last
-GitHub CI run is still `c379ae3`. The first push will be GitHub's first sight of all of it,
-so watch that run. Everything below was verified locally: `make check` and a full
+reached; every one is still open and still Shawn's. All of this session's work is pushed,
+and GitHub CI is green on it (item 1 below). Everything below was verified locally: `make check` and a full
 `make ci` replay (11 of 11) on the final tree.
 
 **Where things stand, measured at the final commit:** 248 tests (247 and 1 skipped without
@@ -478,8 +476,16 @@ compatible):
 - Python 3.14 is declared.
 
 **Still open, in rough priority order:**
-1. [todo] **Push**, then watch GitHub's first CI run of this session's work. It has only run
-   under act so far.
+1. [done] **Pushed** `c379ae3..5eda6f8` (Shawn, 2026-10-12). GitHub CI run `38283130230`:
+   11 of 11 green; each test leg 247 passed and 1 skipped (the sibling-only drift test),
+   94.75% coverage. Before that, one pre-release check, run from a fresh build of `5eda6f8`
+   (`0.0.3.dev26`): `twine check --strict` passes; the installed CLI on 3.11 and 3.14
+   edited a WordPress-installer-style config with real `);` salts, and PHP 8.4 read back
+   exactly what was written; database's suite passed against this build (128 passed,
+   13 skipped for want of MySQL).
+   **Next release version is undecided.** `0.1.0` was suggested for the new public
+   `ConfigKeyError` and the behaviour changes; the bump is chosen when `release.yml` is
+   dispatched.
 2. [blocked] Step 4 of the brief: the legacy two-component tags, the retired-name release
    assets, publishing to PyPI, and the Gitea org's visibility. Unchanged since 2026-10-03.
 3. [blocked] Backup's documents: AD-30 is undefined, AD-24 conflicts with AD-2, and ADR-0007,
