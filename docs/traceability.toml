@@ -307,7 +307,11 @@ reason = "boto3 extra belongs to database."
 id = "ADR-0009"
 source_sha256 = "a8ac4705f7a13f88c93dde95f213fcab79e6c93c05a10251154a4c9618c9a187"
 binds = true
-untested = "Nothing asserts requires-python >= 3.11 or that the CI matrices cover every version in the range. database's tests/test_declared_facts.py (FR-48) is the family shape for this, not yet ported: here the matrices run 3.11-3.14 while the classifiers stop at 3.13."
+enforced_by = [
+    "tests/test_declared_facts.py::test_classifiers_agree_with_requires_python",
+    "tests/test_declared_facts.py::test_every_python_matrix_matches_the_classifiers",
+]
+note = "Ported verbatim from l3io-wordpress-database (its FR-48), the family shape. 3.14 is supported (Shawn, 2026-10-12): classifier added to match the matrices."
 
 [[rule]]
 id = "ADR-0010"

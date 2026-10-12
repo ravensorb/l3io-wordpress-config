@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP :: Site Management",
 ]
 
@@ -49,6 +50,10 @@ dev = [
     # one thing this repo's rules will not tolerate is a hand-written YAML parser.
     "pyyaml==6.0.3",
     "types-pyyaml==6.0.12.20260906",
+    # tests/test_declared_facts.py compares requires-python with the classifiers.
+    # Declared directly, at the version already locked through pytest, rather than
+    # imported transitively and lost when pytest stops needing it.
+    "packaging==26.3",
 ]
 
 # AD-27: the wheel ships the l3io/ and l3io/wp/ directories WITHOUT __init__.py

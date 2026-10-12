@@ -339,7 +339,7 @@ all. Shawn chose a traceability table instead.
   - [done] AD-14 — only file-adapter paths checked; public entry points not derived.
   - [done] AD-15 — `publish-pypi`'s never-from-a-tag `if:` is unchecked.
   - [done] ADR-0007 — console script + `python -m` untested.
-  - [todo] ADR-0009 — Python floor and matrix coverage untested; this is FR-48, whose family
+  - [done] ADR-0009 — Python floor and matrix coverage untested; this is FR-48, whose family
     shape is `l3io-wordpress-database`'s `tests/test_declared_facts.py`, blocked here on 3.14.
     Note ADR-0009 says the matrix covers "every version in the range", and `>=3.11` is
     open-ended — that reads in favour of *adding* the 3.14 classifier. Still Shawn's call.
@@ -386,3 +386,8 @@ all. Shawn chose a traceability table instead.
     now be PHP identifiers, or raise the new **`ConfigKeyError`** — a public API addition.
     `l3io-wordpress-database` catches `WpConfigError` and only reads, so it is unaffected.
 - Coverage rose to 94.72%; the floor is now 94. 224 tests; act green on all four legs.
+- [done] **3.14 is supported** (Shawn, 2026-10-12). Classifier added; database's FR-48 check
+  ported verbatim as `tests/test_declared_facts.py`, its other two checks deliberately not
+  (no extras here, no script run against the wheel; both would fail as vacuous). `packaging`
+  declared in the dev group. All seven traceability gaps are now closed. Database's matrices
+  stop at 3.13, so **whether database adds 3.14 is still open on its side.**
