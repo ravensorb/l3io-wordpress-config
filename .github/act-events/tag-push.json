@@ -2,8 +2,8 @@
   "ref": "refs/tags/v1.0.0",
   "ref_type": "tag",
   "repository": {
-    "full_name": "ravensorb/py-wpconfigr",
-    "name": "py-wpconfigr",
+    "full_name": "ravensorb/l3io-wordpress-config",
+    "name": "l3io-wordpress-config",
     "owner": { "login": "ravensorb" }
   }
 }

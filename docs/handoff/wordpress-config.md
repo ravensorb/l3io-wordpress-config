@@ -1,6 +1,6 @@
 # Handoff — session `wordpress-config`
 
-**Resume line:** You are `wordpress-config`, working in `py-wpconfigr`. Read
+**Resume line:** You are `wordpress-config`, working in `l3io-wordpress-config`. Read
 `docs/handoff/wordpress-config.md`, then continue.
 
 Written 2026-09-27. Work items are tagged `[todo]` / `[blocked]` / `[done]`; nothing here
@@ -10,7 +10,7 @@ instead — this file is transient state, which `AGENTS.md`'s own rules exclude.
 
 ## What this session owns
 
-`py-wpconfigr`, published as **`l3io-wordpress-config`**, importing as `l3io.wp.config`. Release
+Repo `l3io-wordpress-config`, published as **`l3io-wordpress-config`**, importing as `l3io.wp.config`. Release
 position **1 of 3** in the `l3io.wp` family and the gate on the other two.
 
 Work arrived as a handoff, not as l3io-pm epics — so this repo has no stories, and
@@ -62,9 +62,9 @@ the cheaper action.
 ## Read first, in this order
 
 1. `AGENTS.md` here — invariants, CI conventions, registry facts, known pitfalls.
-2. `../py-wordpress-backup/_bmad-output/implementation-artifacts/handoffs/` —
+2. `../l3io-wordpress-backup/_bmad-output/implementation-artifacts/handoffs/` —
    `00-SHARED-CONTEXT.md` then `01-l3io-wordpress-config.md`. The de facto spec for this package.
-3. `../py-wordpress-backup/docs/adr/` — ADR-0007 (packaging, console scripts), ADR-0010
+3. `../l3io-wordpress-backup/docs/adr/` — ADR-0007 (packaging, console scripts), ADR-0010
    (parser scope and read-back), ADR-0012 (naming); and `ARCHITECTURE-SPINE.md` for AD-1,
    AD-2, AD-14, AD-15, AD-27.
 
@@ -133,7 +133,7 @@ A handoff is read as settled fact, so the distinction is drawn explicitly.
   **`v0.0.2`**, in the registry under the correct name. **An earlier report from this
   session that their pin was `tag = "v1.0.0"` was WRONG** — see "Mistakes this session
   made". Their actual pin was `rev = "87c7a661..."`.
-- `py-wordpress-backup` is the **last of the three with no release at all**: no `v*` tags,
+- `l3io-wordpress-backup` is the **last of the three with no release at all**: no `v*` tags,
   nothing in the registry. It is now unblocked — both its dependencies resolve under their
   correct names. It has also fixed its own `release.yml` dispatch bug and added the
   cross-repo step-parity rule this session reported to it.
@@ -150,7 +150,7 @@ A handoff is read as settled fact, so the distinction is drawn explicitly.
 
 - [done] Distribution renamed to **`l3io-wordpress-config`**; namespace stayed `l3io.wp.config`.
   All three repos now match `l3io-wordpress-*` / `l3io.wp.*`, and it is **mechanically
-  enforced** cross-repo by `../py-wordpress-backup/scripts/check-cicd-alignment.py`, which
+  enforced** cross-repo by `../l3io-wordpress-backup/scripts/check-cicd-alignment.py`, which
   checks the distribution pattern and the namespace root *separately*, from each sibling's
   **committed** `pyproject.toml`. Passes 3 repos, 0 findings.
 - [done] `v0.0.2` released and in the registry. Registry now holds exactly:

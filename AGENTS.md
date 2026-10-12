@@ -1,7 +1,7 @@
 <!-- bmad:context -->
 <!-- Verified 2026-09-16 against 8f25bb8 plus the uncommitted rewrite. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
-## py-wpconfigr → l3io-wordpress-config
+## l3io-wordpress-config
 
 Reads and writes `define()` constants and file-scope variable assignments in a
 WordPress `wp-config.php`. A fork of `cariad/py-wpconfigr` (MIT), rewritten as
@@ -9,7 +9,7 @@ WordPress `wp-config.php`. A fork of `cariad/py-wpconfigr` (MIT), rewritten as
 packages — nothing else ships until this resolves from PyPI. Zero runtime
 dependencies; hatchling and uv; `src/` layout.
 
-Governing documents live in the `py-wordpress-backup` repo and are authoritative.
+Governing documents live in the `l3io-wordpress-backup` repo and are authoritative.
 Read them rather than re-deriving their decisions; if one looks wrong, say so and
 stop.
 
@@ -47,7 +47,7 @@ stop.
   Shawn's answer each time was that it stays in this repo. Availability of the KB tools is
   not authorisation, and a peer reporting it as "missing" is reporting the decision, not a
   gap.
-- Authoritative decisions, in `../py-wordpress-backup/`:
+- Authoritative decisions, in `../l3io-wordpress-backup/`:
   `_bmad-output/implementation-artifacts/handoffs/` (start with `00-SHARED-CONTEXT.md`,
   then `01-l3io-wordpress-config.md`), `docs/adr/` (13 records), and
   `_bmad-output/planning-artifacts/architecture/architecture-py-wordpress-backup-2026-09-15/ARCHITECTURE-SPINE.md`.
@@ -123,7 +123,7 @@ stop.
   repo still carries on its remote — `v0.3`, `v1.0`, `v1.2`, `v1.3`, `v1.4`. At
   `0.0.x` the floating tags are `v0`/`v0.0` and collide with nothing, so the hazard is
   latent: the first `1.x` release would silently repoint a 2018 tag.
-  `py-wordpress-backup` has floating tags and no legacy `v*` tags, which is why it is
+  `l3io-wordpress-backup` has floating tags and no legacy `v*` tags, which is why it is
   safe there and not here.
 - `publish.yml` is a separate file and act must never run it; `.actrc` pins act to
   `ci.yml`. act has no OIDC and ignores `job.permissions`, so an `if:` guard would
@@ -172,7 +172,7 @@ stop.
   `uv lock -U`, so pin a rev or tag if the consumer must be immune to pushes here.
 - **Never a path source.** It lives in a committed `pyproject.toml`, so CI fails
   with `Distribution not found at: file:///...` — the runner has no such directory,
-  and a relative `../py-wpconfigr` only moves the problem.
+  and a relative `../l3io-wordpress-config` only moves the problem.
 - **Never `UV_FIND_LINKS`.** It resolves, but the lock records
   `source = { registry = "/home/.../dist" }` — an absolute local path that looks
   portable and is not. Worse than the path source for that reason.
