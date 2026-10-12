@@ -17,8 +17,12 @@ state tree is empty by design.
 
 ## Current state (2026-10-12)
 
-- Last release: **`v0.0.2`**, on GitHub Releases and the internal Gitea registry. Nothing
-  is on PyPI.
+- Last release: **`v0.1.0`** (2026-10-12, Shawn), on GitHub Releases and the internal Gitea
+  registry, with floating `v0` and `v0.1` pointing at it. Nothing is on PyPI. Verified by
+  installing from both the release wheel and the Gitea index. Its notes first published
+  as "no changes": the builder took the floating `v0.1` as the previous tag. That is
+  fixed in `14512f0`, and the release body was rebuilt from `v0.0.2..v0.1.0` using
+  `.github/changelog-config.json`.
 - Remote refs: tags `v0.0.0` (version baseline) and `v0.0.2`; branches `main`,
   `legacy/pre-cleanup` and `legacy/upstream-2019`. Older tags, the `v0.0.1` release and
   `dev2` were retired on 2026-10-12; `LEGACY.md` on `legacy/pre-cleanup` lists them.
@@ -26,7 +30,7 @@ state tree is empty by design.
   against a floor of 94. Python 3.11–3.14 declared and tested.
 - `docs/traceability.toml` maps every governing rule to what enforces it. All gaps are
   closed.
-- Unreleased behaviour changes since `v0.0.2`:
+- Behaviour changes released in `v0.1.0`:
   - new public `ConfigKeyError`;
   - `nan`/`inf` are refused;
   - no stdlib exception escapes `WpConfigFile`;
@@ -43,8 +47,12 @@ state tree is empty by design.
    effect on the next real release; none exist yet. Config narrowed `publish.yml`'s push
    filter to `v*.*.*`. Backup's is still `v*`, which would start a publish on a hand-pushed
    floating tag. That is backup's to adopt.
-2. [blocked] **Next release version.** `0.1.0` is suggested for the behaviour changes
-   above. It is chosen when `release.yml` is dispatched.
+2. [todo] **Siblings: release notes break once floating tags exist.** Backup moves floating
+   tags and its changelog step sets no `from-tag`, so every release after its first will
+   publish "no changes". Database would hit the same if it enabled floating tags. The fix
+   is config's `14512f0`: a step that resolves the previous `v*.*.*` tag, passed as
+   `from-tag`. Database must also repin from `v0.0.2` to `v0.1.0` to receive the parser
+   fix; that is already in its handoff.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
    AD-15: nothing reaches PyPI until all three packages can.
 4. [blocked] **Fixes to backup's documents**, which belong to backup:
