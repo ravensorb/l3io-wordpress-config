@@ -58,45 +58,17 @@ state tree is empty by design.
    by PHP) as a local-only test, skipped without docker. It is the only grader
    independent of the scanner.
 7. [todo] The Gitea registry contents have not been re-read since 2026-10-03.
+8. [todo] **Port FR-45, the security-audit workflow, from database's `cc107fb`.**
+   Database's handoff records that config will port it as-is. It runs
+   `uv audit --locked --preview-features audit` on push, PR, a weekly cron and dispatch,
+   with `make audit` and dry-run legs for its triggers. Not done yet.
 
-## For the next `l3io-wordpress-database` session — undelivered
+## Sent to `l3io-wordpress-database`
 
-Written 2026-10-12 because the database session ended before this reached it. Point that
-session here. Nothing below approves any action in database's repo; each item is for it to
-put to Shawn. Delete this section once database has acted on it or declined.
-
-1. **Legacy cleanup.** Shawn retired config's legacy material and wants database to do the
-   same, if he approves it there. Config's recipe, in order:
-   - **Backup first.** `git fetch origin '+refs/heads/*:refs/remotes/origin/*' --tags`, then
-     `git bundle create <dir>/repo-all-refs.bundle --all`, `git bundle verify`, and a test
-     clone from the bundle confirming every tag. Also save the retired-name release files
-     (`gh release download <tag>`) and a tag→commit list.
-   - **Branch `legacy/pre-cleanup`** at `main`'s tip, plus a `LEGACY.md` listing every
-     retired tag, branch and release with its full SHA. Upstream work not in `main`'s
-     history goes to its own `legacy/*` branch.
-   - **Before deleting,** check each legacy tag is an ancestor of `main` or on a legacy
-     branch (`git merge-base --is-ancestor`), and that no sibling pins it. Then
-     `gh release delete <tag> --yes --cleanup-tag` and
-     `git push origin --delete <tags> <branches>`.
-   - **Keep** `v0.0.0`, the version baseline, and the current release tag.
-   - **Docs on `main`** describe the current package only. `LICENSE` keeps the original
-     copyright line, which MIT requires.
-
-   The permission classifier blocks the deletions until Shawn approves them explicitly.
-   Reference: config's `LEGACY.md` on `legacy/pre-cleanup`, and commit `3b74f6d`.
-2. **Floating tags.** Config maintains `v<major>`/`v<major>.<minor>` as backup does
-   (commit `db7625d`). It also narrowed `publish.yml`'s push filter from `v*` to
-   `['v*.*.*', '!v0.0.0']`, so a floating tag can never start a publish. If database
-   enables floating tags, do the same; the guards are in config's
-   `tests/test_workflow_gates.py`.
-3. **Next config release.** Database pins config's `v0.0.2`, which the cleanup left in
-   place. When config releases (`0.1.0` suggested; not yet decided):
-   - repin to the new tag;
-   - add a test that reads a `DB_PASSWORD` containing `);`, since the parser fix for such
-     values only reaches database through that repin.
-
-   Database's suite already passes against config's development build: 128 passed, and
-   13 skipped for want of MySQL.
+Three items (config's legacy-cleanup run, the floating-tag filter, and the repin after
+config's next release) were written into database's own handoff at Shawn's request:
+commit `145df84` on its branch `feat/plan-1-core-api`, not pushed. Nothing else waits on
+delivery.
 
 ## Cautions that still bind
 
