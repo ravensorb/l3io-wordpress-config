@@ -62,8 +62,10 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **101 passing at ~92% coverage**. No coverage
-  floor is enforced — `--cov` reports, nothing fails under a threshold.
+- `uv sync --locked` then `uv run pytest`. Expect **101 passing at ~92% coverage**.
+  `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
+  subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
+  `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.
 - **Do not run `uv self update`.** `[tool.uv] required-version` pins `==0.11.6` to
   match CI; a different uv writes a lock CI rejects. Change both together or neither.
 - `make check` runs lint, types, contracts and tests — everything CI's static,

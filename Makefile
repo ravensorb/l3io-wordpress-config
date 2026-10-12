@@ -74,7 +74,7 @@ types: ## mypy --strict
 	$(UV) run mypy
 
 contracts: ## Architecture contract gates (AD-27, AD-1, AD-2)
-	$(UV) run pytest tests/test_architecture.py -q
+	$(UV) run pytest tests/test_architecture.py -q --no-cov
 
 namespace-check: ## AD-27: prove the namespace survives a sibling distribution
 	$(UV) run python tools/check_namespace_coexistence.py

@@ -69,7 +69,7 @@ jobs:
       # AD-27, AD-1, AD-2. Scope is derived by walking the package tree, so a
       # module added later cannot escape the rules.
       - name: architecture contracts
-        run: uv run pytest tests/test_architecture.py -q
+        run: uv run pytest tests/test_architecture.py -q --no-cov
 
       # AD-27 again, against the SOURCE tree, as a second independent check that
       # does not depend on the test suite importing correctly. A marker file at

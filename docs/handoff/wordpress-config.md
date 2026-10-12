@@ -308,6 +308,14 @@ is still there. Reading the token from Infisical was refused by the harness's pe
 classifier this session, so the 2026-10-03 registry list stands as recorded, unchecked.
 
 **Found while reconciling:**
-- [todo] **No coverage floor.** `addopts` passes `--cov` with a report only; neither
-  `pyproject.toml`, the `Makefile` nor `ci.yml` sets `fail_under`. 92% is observed, not
-  enforced — a deleted test file would leave CI green.
+- [done] **Coverage floor.** `fail_under = 92` (observed 92.18%, line coverage, identical on
+  3.11–3.14); the `contracts` subset runs pass `--no-cov`. Planted violation: ignoring
+  `tests/test_cli.py` fails at 75.90%. Replayed under act: `contracts` and all four `test`
+  legs green.
+- [todo] **`make ci` / `make ci-job` fail outside a TTY on this machine.** The `Makefile`
+  comment above `ACT_BARE_SECRETS` says act "does not prompt for [GITHUB_TOKEN] when absent";
+  tested 2026-10-12, it does prompt (`Provide value for 'GITHUB_TOKEN'`, act 0.2.89,
+  `~/.actrc` declares `-s GITHUB_TOKEN`) and then fails. Earlier sessions likely had the
+  variable exported. Workaround that worked: `GITHUB_TOKEN="$(gh auth token)" make ci-job
+  JOB=...`. Not fixed — whether the `Makefile` should supply it is a design change, and the
+  comment is wrong either way.
