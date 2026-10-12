@@ -31,6 +31,13 @@ permissions:
 # .venv behind, and the four parallel matrix jobs race to delete each other's
 # ("failed to remove directory .venv/bin: Directory not empty"). On GitHub each
 # job owns its VM, so this changes nothing there.
+#
+# PYTHONPYCACHEPREFIX applies the same rule to bytecode, for every job: without
+# it, each Python version a replay runs left root-owned .pyc files in src/ and
+# tests/ __pycache__ directories. pytest's assertion rewriting honours it too.
+env:
+  PYTHONPYCACHEPREFIX: /tmp/l3io-pycache
+
 jobs:
   static:
     name: lint · format · types
@@ -134,6 +141,8 @@ jobs:
       # the host's tree, shared by all four legs at once: they corrupted one
       # another's data file ("no such table: meta") and left it root-owned.
       COVERAGE_FILE: /tmp/l3io-coverage-py${{ matrix.python }}
+      # Same rule for hypothesis's example database, which defaults to ./.hypothesis.
+      HYPOTHESIS_STORAGE_DIRECTORY: /tmp/l3io-hypothesis-py${{ matrix.python }}
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }  # hatch-vcs needs tags; shallow yields 0.1.devN
