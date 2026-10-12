@@ -62,7 +62,7 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **228 passing at ~94% coverage** (227 and 1 skipped without the sibling repo).
+- `uv sync --locked` then `uv run pytest`. Expect **248 passing at ~94% coverage** (247 and 1 skipped without the sibling repo).
   `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
   subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
   `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.
@@ -118,7 +118,9 @@ stop.
   **The rule is general: nothing a job writes may land in the working tree.** Under act
   that tree is the host's, shared by every matrix leg, and written as root. Two more
   instances were found on 2026-10-12: `dist/` (built wheels, now `WHEEL_DIR`) and
-  `.coverage` (now `COVERAGE_FILE`), the second corrupting itself across concurrent legs
+  `.coverage` (now `COVERAGE_FILE`; `.hypothesis` likewise, via
+  `HYPOTHESIS_STORAGE_DIRECTORY`; bytecode via a workflow-level `PYTHONPYCACHEPREFIX`),
+  the second corrupting itself across concurrent legs
   so that a full `make ci` failed or passed at random.
 - Prefer restructuring over gating. The one `vars.LOCAL_ACT` use left is cache
   tuning, not a skipped step. If a difference is genuinely unavoidable, express it
@@ -203,6 +205,12 @@ stop.
   WordPress writes `define( 'X', 'y' );` with inner spaces and a write preserves
   that formatting, so comparing whole statements against a canonical rendering
   rejects correct writes to almost every real `wp-config.php`.
+- **Read-back cannot catch a span bug.** It re-scans with the same patterns that
+  wrote the value, so a pattern that ends a value too early passes its own check.
+  That shipped: `.*?` ended values at the first `);` even inside quotes, and 7.5% of
+  WordPress salt sets were corrupted on write with read-back green. Test spans against
+  values with a known reading (`tests/test_value_spans.py`), never against the scanner.
+  PHP itself is the only independent oracle, and it is not in the test suite.
 - Only single-quoted values parse as strings. `define('X', "y")` returns the raw
   text `"y"`, quotes included, and a PHP expression returns its source text.
   Both are accepted limits, not bugs to fix here. (ADR-0010)

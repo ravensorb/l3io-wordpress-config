@@ -336,8 +336,14 @@ enforced_by = [
     "tests/test_parser_scope.py::test_a_non_finite_float_is_refused_on_both_paths",
     "tests/test_parser_scope.py::test_a_non_finite_float_never_reaches_the_file",
     "tests/test_parser_scope.py::test_an_invalid_key_is_refused_before_anything_is_written",
+    "tests/test_value_spans.py::test_a_real_wordpress_salt_reads_whole",
+    "tests/test_value_spans.py::test_writing_over_a_real_salt_replaces_all_of_it",
+    "tests/test_value_spans.py::test_any_define_write_changes_only_its_own_value",
+    "tests/test_value_spans.py::test_any_variable_write_changes_only_its_own_value",
+    "tests/test_value_spans.py::test_a_file_write_of_any_value_verifies_and_lands",
+    "tests/test_value_spans.py::test_only_a_file_scope_variable_is_read",
 ]
-not_checkable = "The 'Revisit when' conditions -- a read-back failure on a file WordPress itself wrote, or a maintained round-tripping PHP-constant library appearing -- are events in the world, not properties of this code."
+not_checkable = "The 'Revisit when' conditions are events in the world, not properties of this code. Condition (a) was met on 2026-10-12, in a stronger form: WordPress-generated salts were cut short and corrupted on write with read-back passing. Fixed within Option C (quote-aware value spans); condition (b) was checked the same day and is not met. The ADR text records neither -- reported, not resolved here."
 
 [[rule]]
 id = "ADR-0011"

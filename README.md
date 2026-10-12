@@ -27,9 +27,12 @@ Its scope is deliberately bounded, and the boundaries are these:
 - Only **single-quoted** string values are parsed as strings. `define('X', "y")`
   returns the raw text `"y"`, quotes included.
 - A value must sit on **one line**. A statement spanning lines is not matched.
-- `define()` and `$variable` statements must start at the beginning of a line
-  (leading whitespace aside). This is what makes a commented-out
-  `// define('X', 'y');` correctly invisible.
+- `define()` statements must start at the beginning of a line (leading
+  whitespace aside), and `$variable` assignments at column 0, which approximates
+  file scope: one indented inside a function body is not read. This is what
+  makes a commented-out `// define('X', 'y');` correctly invisible.
+- Quoted strings are read whole, so a `)`, `;` or quote inside one never ends
+  the value. WordPress's own salts contain `);` in about one site in thirteen.
 - A value that is a **PHP expression** or references another constant is
   returned as its raw source text, not evaluated.
 - Adding a constant inserts after the **first** `<?php` opening tag. A file with

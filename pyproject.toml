@@ -54,6 +54,9 @@ dev = [
     # Declared directly, at the version already locked through pytest, rather than
     # imported transitively and lost when pytest stops needing it.
     "packaging==26.3",
+    # Property tests for value spans (ADR-0010): generated values whose true
+    # reading is known, since read-back re-scans with the same patterns it checks.
+    "hypothesis>=6.169.0,<7.0.0",
 ]
 
 # AD-27: the wheel ships the l3io/ and l3io/wp/ directories WITHOUT __init__.py

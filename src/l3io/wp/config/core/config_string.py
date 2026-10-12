@@ -38,21 +38,30 @@ Kind = Literal["define", "variable"]
 
 _log = getLogger(__name__)
 
+# A quoted PHP string, consumed whole, so nothing inside it can end a value.
+_QUOTED = r"'(?:[^'\\\n]|\\.)*'|\"(?:[^\"\\\n]|\\.)*\""
+
+# A value: quoted strings as atomic tokens, anything else one character at a
+# time, never a newline and never a bare quote. Non-greedy, so it stops at the
+# first terminator OUTSIDE a string. It used to be `.*?`, which stopped at the
+# first `);` anywhere: WordPress's salt generator emits both characters, and
+# 7.5% of salt sets were cut short and corrupted on write, with read-back passing
+# because it re-scans with this same pattern. tests/test_value_spans.py.
+_VALUE = rf"(?:{_QUOTED}|[^'\"\n])*?"
+
 # Anchored at line start so a commented-out `// define(...)` never matches; that
-# anchor is the v1.4 fix and is load-bearing. The value group is non-greedy and
-# `.` excludes newlines, so a constant cannot swallow a neighbour on the same
-# line or run past the end of its own.
+# anchor is the v1.4 fix and is load-bearing. Leading whitespace is allowed:
+# WP-CLI writes WP_DEBUG indented inside an `if ( ! defined(...) )` block.
 _DEFINE_RE = re.compile(
-    r"^[ \t]*define\s*\(\s*'(?P<key>(?:[^'\\]|\\.)*)'\s*,\s*(?P<value>.*?)\s*\)\s*;",
+    rf"^[ \t]*define\s*\(\s*'(?P<key>(?:[^'\\]|\\.)*)'\s*,\s*(?P<value>{_VALUE})\s*\)\s*;",
     re.MULTILINE,
 )
 
-# Same discipline as _DEFINE_RE: anchored at line start, so a commented-out
-# assignment never matches, and `.` excludes newlines so a value stays on its
-# own line. The anchor also approximates file scope -- an assignment indented
-# inside a function body is not matched, which is the intent.
+# Anchored at column 0, which approximates file scope: an assignment indented
+# inside a function body is not matched. It used to allow leading whitespace,
+# so an indented `$table_prefix` above the file-scope one was the one read.
 _VARIABLE_RE = re.compile(
-    r"^[ \t]*\$(?P<key>[A-Za-z_]\w*)\s*=\s*(?P<value>.*?)\s*;",
+    rf"^\$(?P<key>[A-Za-z_]\w*)\s*=\s*(?P<value>{_VALUE})\s*;",
     re.MULTILINE,
 )
 

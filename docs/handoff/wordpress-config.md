@@ -417,7 +417,7 @@ all. Shawn chose a traceability table instead.
 "a read-back failure ... against a `wp-config.php` that WordPress itself wrote". What happens
 instead is silent corruption with read-back passing:
 
-- [blocked] **A value containing `)` then `;` is cut short and corrupted on write.** The
+- [done] **A value containing `)` then `;` is cut short and corrupted on write.** The
   define pattern ends the value at the first `\s*\)\s*;`, inside quotes or not.
   `define( 'AUTH_KEY', 'ab);cd' );` reads as `'ab`, and `set()` writes
   `define( 'AUTH_KEY', 'new');cd' );`, which is a PHP syntax error. It returns success, and
@@ -425,8 +425,8 @@ instead is silent corruption with read-back passing:
   WordPress's own salt API (`api.wordpress.org/secret-key/1.1/salt/`, the source
   `wp-config-sample.php` points to): **3 of 320 salts misread, 3 of 40 salt sets (7.5%)**.
   `DB_PASSWORD`, which a restore rewrites, is exposed the same way.
-- [blocked] **The variable pattern has the same flaw with `;`**: `$a = 'x;y';` reads as `'x`.
-- [blocked] **Indented assignments are matched, despite the comment saying otherwise.**
+- [done] **The variable pattern has the same flaw with `;`**: `$a = 'x;y';` reads as `'x`.
+- [done] **Indented assignments are matched, despite the comment saying otherwise.**
   `_VARIABLE_RE` is anchored `^[ \t]*`, so `$table_prefix` assigned inside a function body
   above the file-scope one is the one `get_variable()` returns.
 
@@ -442,3 +442,16 @@ matches, correctly.
 
 Put to Shawn: fix inside ADR-0010's Option C (quote-aware value spans, column-0 variables),
 or reopen the ADR. Not acted on.
+- [done] **Fixed within Option C** (Shawn, 2026-10-12). Quoted strings are atomic tokens in
+  the value pattern, and variables are anchored at column 0. Tests: three real salts, and
+  `hypothesis` properties over values dense in `);`, `')`, `\'` and `"`. The expected
+  content comes from a template, so the parser never grades itself. The first strategy drew
+  single characters and passed over the defect, because `)` and `;` were rarely adjacent, so
+  the delimiters are drawn as whole tokens. 0 of 320 real salts misread.
+  **Checked against PHP 8.4 itself** (`php:8.4-cli` in docker, a one-off, not in the suite):
+  300 configs written through `WpConfigFile.set()` all parse, and PHP reads exactly the
+  values written. Against the pre-fix code the first file was already invalid PHP.
+- [todo] Optional: make the PHP check a local-only test, skipped without docker, like the
+  traceability drift test. It is the only grader independent of the scanner. Not done.
+- [blocked] ADR-0010 should record that condition (a) was met and how it was answered. That
+  is backup's document.
