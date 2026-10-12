@@ -72,20 +72,20 @@ def test_dev_builds_carry_no_local_version_label(pyproject: dict[str, Any]) -> N
 
 
 def test_only_three_component_tags_are_candidates(pyproject: dict[str, Any]) -> None:
-    """The guard against this repo's two-component tags.
+    """Only three-component release tags may become the version basis.
 
-    Without the match, ``v1.0`` is the nearest ancestor of every commit on main;
-    setuptools-scm reads its two components, guesses the next MINOR, and builds
+    Without the match, a two-component tag such as ``v1.0`` would be read as its
+    two components, setuptools-scm would guess the next MINOR, and builds would
     come out as ``1.1.devN`` -- which sorts ABOVE ``1.0.0`` in PEP 440, so
-    publishing one would permanently outrank the real release. Reproduced before
+    publishing one would permanently outrank a real release. Reproduced before
     this pattern was added.
     """
     raw = pyproject["tool"]["hatch"]["version"]["raw-options"]
     describe = raw["git_describe_command"]
     assert "--match" in describe
     assert "v[0-9]*.[0-9]*.[0-9]*" in describe, (
-        "the describe match must require three components, or the two-component "
-        "v1.0 tag becomes the version basis again"
+        "the describe match must require three components, or a two-component "
+        "tag can become the version basis"
     )
 
 

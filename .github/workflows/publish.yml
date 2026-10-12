@@ -74,13 +74,10 @@ jobs:
           fi
 
   version-gate:
-    # Runs for BOTH triggers; the tag steps skip on a dispatch. (no floor)
-    # the fork's 1.4 can never be re-uploaded. That was prose in AGENTS.md; here
-    # it is a gate.
-    #
     # Runs for BOTH triggers. A workflow_dispatch has no tag, so the tag steps are
-    # skipped and only the floor is enforced; a tag push additionally has to agree
-    # with pyproject.toml, which catches publishing a version nobody tagged.
+    # skipped; a tag push must parse as a three-component version. There is no
+    # version floor. That the tag agrees with the artifact it publishes is
+    # checked in smoke, against the built wheel.
     name: validate version
     runs-on: ubuntu-latest
     steps:
@@ -104,12 +101,8 @@ jobs:
           version-regex: '^v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$'
 
       - name: the tag version parsed
-        # There is no version floor. An earlier one refused releases below a
-        # hard-coded minimum, on the grounds that PyPI had burned a filename of the
-        # predecessor distribution -- the one ADR-0002 planned to reclaim and ADR-0012
-        # superseded. This publishes as `l3io-wordpress-config`, which has never been
-        # published, so no version is spent for this name and that floor was guarding
-        # a premise that no longer holds.
+        # There is no version floor: `l3io-wordpress-config` has never been
+        # published to PyPI, so no version of this name is spent.
         #
         # Checked against the TAG, not pyproject. The tag is now the version
         # (AD-30), pyproject carries no literal, and the previous spelling --

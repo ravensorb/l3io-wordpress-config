@@ -113,17 +113,12 @@ make ci         # replay the whole CI pipeline locally with nektos/act
 drift apart. Do not run `uv self update` without changing that pin and CI
 together.
 
-## Credits and history
+## Credits
 
-A fork of [`cariad/py-wpconfigr`](https://github.com/cariad/py-wpconfigr) by
-Cariad Eccleston, MIT licensed, taken at its 2019 state. The original copyright
-notice is retained in `LICENSE`.
-
-Upstream did not stop — it renamed itself and continues as
-[`wpconfigger`](https://pypi.org/project/wpconfigger/). **If you want the
-original author's maintained package, use `wpconfigger`.** This fork exists
-because this project needed to change the parser and did not want to depend on
-a package with a single maintainer.
+Originally derived from [`cariad/py-wpconfigr`](https://github.com/cariad/py-wpconfigr)
+by Cariad Eccleston (MIT; see `LICENSE`), whose maintained package is now
+[`wpconfigger`](https://pypi.org/project/wpconfigger/). Earlier history is kept on
+the `legacy/*` branches and is not maintained.
 
 ## Releases
 
@@ -131,6 +126,3 @@ Release notes are built from the commit log at release time and published on the
 [GitHub releases page](https://github.com/ravensorb/l3io-wordpress-config/releases) — there
 is no changelog file to keep in sync, and this section deliberately does not
 duplicate one.
-
-Versions before `0.0.1` belong to the upstream fork this package was rewritten
-from. This package's own release line starts at `0.0.1`.

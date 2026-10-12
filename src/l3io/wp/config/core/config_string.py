@@ -50,7 +50,7 @@ _QUOTED = r"'(?:[^'\\\n]|\\.)*'|\"(?:[^\"\\\n]|\\.)*\""
 _VALUE = rf"(?:{_QUOTED}|[^'\"\n])*?"
 
 # Anchored at line start so a commented-out `// define(...)` never matches; that
-# anchor is the v1.4 fix and is load-bearing. Leading whitespace is allowed:
+# anchor is load-bearing. Leading whitespace is allowed:
 # WP-CLI writes WP_DEBUG indented inside an `if ( ! defined(...) )` block.
 _DEFINE_RE = re.compile(
     rf"^[ \t]*define\s*\(\s*'(?P<key>(?:[^'\\]|\\.)*)'\s*,\s*(?P<value>{_VALUE})\s*\)\s*;",

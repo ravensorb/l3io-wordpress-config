@@ -4,8 +4,8 @@
 ## l3io-wordpress-config
 
 Reads and writes `define()` constants and file-scope variable assignments in a
-WordPress `wp-config.php`. A fork of `cariad/py-wpconfigr` (MIT), rewritten as
-`l3io-wordpress-config`, importing as `l3io.wp.config`, released **first** of three
+WordPress `wp-config.php`. Published as `l3io-wordpress-config`, importing as
+`l3io.wp.config`, released **first** of three
 packages — nothing else ships until this resolves from PyPI. Zero runtime
 dependencies; hatchling and uv; `src/` layout.
 
@@ -27,16 +27,15 @@ stop.
 - Never publish to PyPI. Finish with a verified artifact and hand back; a human
   releases.
 - **The git tag is the version** (AD-30). There is no literal in this repo to drift
-  from it, and there is no version floor — the one that used to exist guarded a
-  premise about the predecessor distribution that ADR-0012 superseded. What
-  `publish.yml` does enforce is that a tagged publish ships a **final** version,
-  never a `.devN` build.
+  from it, and there is no version floor. What `publish.yml` does enforce is that a
+  tagged publish ships a **final** version, never a `.devN` build.
 - Do not widen the parser beyond `define()` and simple file-scope variable
   assignments, and do not add a runtime dependency for any reason.
-- Keep `Copyright (c) 2018 Cariad Eccleston` in `LICENSE` — MIT requires it — and keep
-  `README.md`'s credit to the fork origin, naming upstream's own successor
-  `wpconfigger`. Anyone wanting the original author's maintained package should be
-  sent there, not here.
+- **`main` describes this package only.** Earlier history — the upstream code, the
+  retired tags and name, past session logs — lives on the `legacy/*` branches and is
+  not maintained; do not reintroduce it here. Two things stay because they must:
+  `Copyright (c) 2018 Cariad Eccleston` in `LICENSE`, which MIT requires, and the
+  README's one-line credit pointing to the original author's maintained `wpconfigger`.
 
 ## Where things are
 
@@ -129,11 +128,8 @@ stop.
 - **A tag created by a workflow fires no push event, so `release.yml` must dispatch
   `publish.yml` itself.** GitHub does not trigger workflows from a ref created with
   `GITHUB_TOKEN`. Without the dispatch the tag sits unpublished while `release.yml`
-  reports success. Confirmed twice: `py-wordpress-database`'s `v0.0.1` was created by
-  the tag action and produced zero Publish runs, and this repo's `v0.0.2` has exactly
-  one Publish run, on `workflow_dispatch`. The `push`-event Publish runs on `v0.0.0`
-  and `v0.0.1` came from tags pushed by hand from a terminal — that is why those
-  fired, and why the absence of the dispatch is easy to miss.
+  reports success. A tag pushed by hand from a terminal *does* fire the push event,
+  which is why the missing dispatch is easy to miss.
 - **Do not enable `git-action-tag-floating-version` here.** Floating *minor* tags have
   the shape `vX.Y`, which is exactly the shape of the abandoned upstream tags this
   repo still carries on its remote — `v0.3`, `v1.0`, `v1.2`, `v1.3`, `v1.4`. At
