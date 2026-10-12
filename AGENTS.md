@@ -130,13 +130,13 @@ stop.
   `GITHUB_TOKEN`. Without the dispatch the tag sits unpublished while `release.yml`
   reports success. A tag pushed by hand from a terminal *does* fire the push event,
   which is why the missing dispatch is easy to miss.
-- **Do not enable `git-action-tag-floating-version` here.** Floating *minor* tags have
-  the shape `vX.Y`, which is exactly the shape of the abandoned upstream tags this
-  repo still carries on its remote — `v0.3`, `v1.0`, `v1.2`, `v1.3`, `v1.4`. At
-  `0.0.x` the floating tags are `v0`/`v0.0` and collide with nothing, so the hazard is
-  latent: the first `1.x` release would silently repoint a 2018 tag.
-  `l3io-wordpress-backup` has floating tags and no legacy `v*` tags, which is why it is
-  safe there and not here.
+- **Floating tags (`git-action-tag-floating-version`) are not enabled here; doing so is
+  a choice, no longer a hazard.** Floating *minor* tags have the shape `vX.Y`. The only
+  reason not to enable them was two-component tags already on the remote, which would
+  have been silently repointed; none remain (`git ls-remote --tags origin`). Never push
+  a hand-made `vX.Y` tag: the floating action would move it, and
+  `pyproject.toml`'s describe match ignores it only for versioning.
+  `l3io-wordpress-backup` has floating tags enabled.
 - `publish.yml` is a separate file and act must never run it; `.actrc` pins act to
   `ci.yml`. act has no OIDC and ignores `job.permissions`, so an `if:` guard would
   not protect it.

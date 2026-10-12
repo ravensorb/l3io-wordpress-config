@@ -19,6 +19,9 @@ state tree is empty by design.
 
 - Last release: **`v0.0.2`**, on GitHub Releases and the internal Gitea registry. Nothing
   is on PyPI.
+- Remote refs: tags `v0.0.0` (version baseline) and `v0.0.2`; branches `main`,
+  `legacy/pre-cleanup` and `legacy/upstream-2019`. Older tags, the `v0.0.1` release and
+  `dev2` were retired on 2026-10-12; `LEGACY.md` on `legacy/pre-cleanup` lists them.
 - `main` is pushed and green on GitHub CI (11 of 11). 248 tests, 94.75% line coverage
   against a floor of 94. Python 3.11–3.14 declared and tested.
 - `docs/traceability.toml` maps every governing rule to what enforces it. All gaps are
@@ -36,16 +39,9 @@ state tree is empty by design.
 
 ## Open
 
-1. [blocked] **Delete the retired remote refs.** The harness blocked this session from
-   deleting them, so Shawn runs it or grants permission. `legacy/pre-cleanup` and
-   `legacy/upstream-2019` already exist, and a verified bundle of every ref is at
-   `~/l3io-backups/l3io-wordpress-config-2026-10-12/`. The refs:
-   - the `v0.0.1` release and tag;
-   - tags `v0.3 v1.0 v1.2 v1.3 v1.4`;
-   - the `dev2` branch.
-
-   Once they are gone, rewrite `AGENTS.md`'s floating-version rule, whose hazard is
-   exactly those `vX.Y` tags.
+1. [blocked] **Floating version tags.** Their only obstacle, the retired `vX.Y` tags, was
+   removed on 2026-10-12 (backup bundle: `~/l3io-backups/l3io-wordpress-config-2026-10-12/`).
+   Enabling them would match `l3io-wordpress-backup`. Not done; it is Shawn's choice.
 2. [blocked] **Next release version.** `0.1.0` is suggested for the behaviour changes
    above. It is chosen when `release.yml` is dispatched.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
