@@ -41,9 +41,11 @@ UV := uv
 # Kept identical to l3io-wordpress-database's Makefile. INFISICAL_ENV must be
 # prod: `infisical secrets` returns an empty string, exit 0, for any other.
 INFISICAL ?= infisical
-INFISICAL_PROJECT ?= 45365f20-36e8-4d4d-87f3-1554c5ae0615
+INFISICAL_PROJECT ?= 7ca0e01b-28f6-4a61-b901-5fe834e1661a
 INFISICAL_ENV ?= prod
-ACT_RUNNER ?= $(INFISICAL) run --projectId $(INFISICAL_PROJECT) --env $(INFISICAL_ENV) --
+# This repo's CI leaf in the home-lab project (ADR-0008): /ci/<platform>/<repo>.
+INFISICAL_PATH ?= /ci/act/l3io-wordpress-config
+ACT_RUNNER ?= $(INFISICAL) run --projectId $(INFISICAL_PROJECT) --env $(INFISICAL_ENV) --path $(INFISICAL_PATH) --
 ACT ?= act
 
 .PHONY: help act-init lint format types test contracts namespace-check check audit ci ci-job ci-dryrun ci-dryrun-one ci-list build verify-wheel clean
