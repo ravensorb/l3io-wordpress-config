@@ -15,10 +15,11 @@ current state only.
 family, and the gate on the other two. Work arrives as handoffs, not l3io-pm epics, so the
 state tree is empty by design.
 
-## Current state (2026-10-12)
+## Current state (2026-10-20)
 
-- Last release: **`v0.1.0`** (2026-10-12, Shawn), on GitHub Releases and the internal Gitea
-  registry, with floating `v0` and `v0.1` pointing at it. Nothing is on PyPI. Verified by
+- Last release: **`v0.1.1`** (2026-10-20), the write-permission fix below. Before it,
+  **`v0.1.0`** (2026-10-12, Shawn), on GitHub Releases and the internal Gitea
+  registry, with floating `v0` and `v0.1` now pointing at `v0.1.1`. Nothing is on PyPI. Verified by
   installing from both the release wheel and the Gitea index. Its notes first published
   as "no changes": the builder took the floating `v0.1` as the previous tag. That is
   fixed in `14512f0`, and the release body was rebuilt from `v0.0.2..v0.1.0` using
@@ -26,8 +27,8 @@ state tree is empty by design.
 - Remote refs: tags `v0.0.0` (version baseline) and `v0.0.2`; branches `main`,
   `legacy/pre-cleanup` and `legacy/upstream-2019`. Older tags, the `v0.0.1` release and
   `dev2` were retired on 2026-10-12; `LEGACY.md` on `legacy/pre-cleanup` lists them.
-- `main` is pushed and green on GitHub CI (11 of 11). 259 tests, 94.75% line coverage
-  against a floor of 94. Python 3.11–3.14 declared and tested.
+- `main` is pushed and green on GitHub CI (11 of 11). 269 tests, 95.32% line coverage
+  against a floor of 95. Python 3.11–3.14 declared and tested.
 - `docs/traceability.toml` maps every governing rule to what enforces it. All gaps are
   closed.
 - Behaviour changes released in `v0.1.0`:
@@ -41,7 +42,7 @@ state tree is empty by design.
 - `make ci` replays the pipeline under act via `infisical run`, and leaves nothing in the
   working tree.
 
-## 2026-10-20: write-permission defect, fix ready for 0.1.1
+## 2026-10-20: write-permission defect, fixed in 0.1.1
 
 Reported by `l3io-wordpress-backup` (session cmvgs1vhh0gy7tf01cfd5vtqt) and reproduced
 against `v0.1.0`: `WpConfigFile.set()` wrote a temp file under the umask and renamed it
@@ -56,9 +57,12 @@ Nine new tests failed on v0.1.0 before the fix. Verified on the built wheel in a
 venv, as root in a container (`www-data` 33:33 `0640` kept; a non-owner refused, no temp
 file left), and by `make ci` under act: 11 of 11.
 
-- [blocked] **Release `v0.1.1`** — Shawn's. Merged and pushed 2026-10-20; next is
-  `gh workflow run release.yml -f bump=patch`. Then tell backup the tag is live; it pins
-  `v0.1.1`. `l3io-wordpress-database` does not write files through this package.
+- [done] **`v0.1.1` released** 2026-10-20 (dispatched at Shawn's instruction once CI
+  on `4c842ca` passed): release run 39501412719, publish run 39501448291, both green.
+  It is on GitHub Releases and the Gitea registry, not PyPI. Floating `v0` and `v0.1`
+  moved to it. Its notes start from `v0.1.0`, so `14512f0` holds now that floating tags
+  exist. Both the release wheel and the Gitea install keep a `0640` file `0640` under
+  umask 022.  `l3io-wordpress-database` does not write files through this package.
 - [done] **Traceability re-judged** against backup's `a865618`. Every drifted row was
   diffed against the text it was last judged on, recovered from backup's history by its
   stored hash, not just re-hashed. New rows: AD-30 binds and every clause has an
