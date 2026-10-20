@@ -50,6 +50,16 @@ committing: the constant written carries the value intended, every constant
 *not* written is byte-identical, and no key appears twice. On any mismatch it
 raises `ReadBackError` and **the original file is left untouched**.
 
+The write is atomic and keeps who can read the file, which holds `DB_PASSWORD`.
+The temporary file has an unpredictable name and is opened exclusively, so nothing
+already in the site directory is written through. It takes the original's mode,
+owner and group before any content reaches it, and it is synced to disk before it
+is renamed over the original, as is the directory after. If the owner cannot be
+kept — a writer that is neither root nor the file's owner — the write raises
+`ConfigWriteError` and changes nothing, rather than handing the file to the writer.
+`WpConfigFile` never creates a `wp-config.php`: a file removed since it was read
+raises `ConfigWriteError`.
+
 ## Install
 
 ```shell

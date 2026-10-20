@@ -9,6 +9,8 @@ by ``__all__`` could not bound it.
 from __future__ import annotations
 
 import os
+import stat
+import tempfile
 from logging import getLogger
 from pathlib import Path
 
@@ -99,29 +101,82 @@ class WpConfigFile:
             return False
 
         intended = working.content
-        tmp = self._path.with_name(f"{self._path.name}.l3io-tmp")
         try:
-            tmp.write_text(intended, encoding="utf-8")
-            # Read back from the temp file, so a failure never touches the original.
-            actual = tmp.read_text(encoding="utf-8")
-            problems = verify_write(before=before, actual=actual, written={(kind, key): value})
-            if problems:
-                raise ReadBackError(filename=str(self._path), mismatches=problems)
-            tmp.replace(self._path)
+            actual = self._replace_verified(intended, before, {(kind, key): value})
         # ValueError is UnicodeEncodeError: a str can hold a lone surrogate that
         # no UTF-8 file can.
         except (OSError, ValueError) as exc:
             raise ConfigWriteError(filename=str(self._path), reason=str(exc), key=key) from exc
-        finally:
-            # Best-effort cleanup; the write already succeeded or already failed.
-            try:
-                tmp.unlink(missing_ok=True)
-            except OSError:  # pragma: no cover - cleanup must not mask the outcome
-                _log.warning("Could not remove temporary file %s", tmp)
 
         self._config = WpConfigString(actual)
         _log.debug("%r written to %s and verified.", key, self._path)
         return True
+
+    def _replace_verified(
+        self, intended: str, before: str, written: dict[tuple[Kind, str], ConfigValue]
+    ) -> str:
+        """
+        Write ``intended`` beside the file, verify it, then rename it over the file.
+
+        The temp file is created by ``mkstemp``: an unpredictable name, opened
+        exclusively, so nothing planted in the site directory is written through, and
+        mode 0600 until it takes the original's mode and owner. The file holds
+        DB_PASSWORD, so a write must never widen who can read it, and an owner that
+        cannot be kept refuses the write rather than handing the file to the writer.
+        There is no original to copy from when the file is gone, so the package never
+        creates one. Both the file and its directory are synced, so a crash leaves
+        either the old content or the new, never an empty file.
+        """
+        original = self._path.stat()
+        directory = self._path.parent
+        fd, name = tempfile.mkstemp(
+            dir=directory, prefix=f".{self._path.name}.", suffix=".l3io-tmp"
+        )
+        tmp = Path(name)
+        committed = False
+        try:
+            with os.fdopen(fd, "w+", encoding="utf-8") as handle:
+                self._take_ownership(handle.fileno(), name, original)
+                handle.write(intended)
+                handle.flush()
+                os.fsync(handle.fileno())
+                # Read back from the temp file, so a failure never touches the original.
+                handle.seek(0)
+                actual = handle.read()
+            problems = verify_write(before=before, actual=actual, written=written)
+            if problems:
+                raise ReadBackError(filename=str(self._path), mismatches=problems)
+            tmp.replace(self._path)
+            committed = True
+            _fsync_directory(directory)
+        finally:
+            if not committed:
+                # Best-effort cleanup; the write already failed.
+                try:
+                    tmp.unlink(missing_ok=True)
+                except OSError:  # pragma: no cover - cleanup must not mask the outcome
+                    _log.warning("Could not remove temporary file %s", tmp)
+        return actual
+
+    def _take_ownership(self, fd: int, name: str, original: os.stat_result) -> None:
+        """Give the temp file the original's owner, then its mode (chown can clear setgid)."""
+        fchown = getattr(os, "fchown", None)
+        if fchown is not None:
+            current = os.fstat(fd)
+            if (current.st_uid, current.st_gid) != (original.st_uid, original.st_gid):
+                try:
+                    fchown(fd, original.st_uid, original.st_gid)
+                except PermissionError as exc:
+                    raise PermissionError(
+                        exc.errno,
+                        f"cannot keep the file's owner {original.st_uid}:{original.st_gid}"
+                        " (run as that owner, or as root); the file was not changed",
+                    ) from exc
+        mode = stat.S_IMODE(original.st_mode)
+        if os.chmod in os.supports_fd:
+            os.fchmod(fd, mode)
+        else:  # pragma: no cover - Windows
+            Path(name).chmod(mode)
 
     def verify(self) -> None:
         """
@@ -144,3 +199,24 @@ class WpConfigFile:
         # a path carrying a NUL byte, which the OS layer rejects before any I/O.
         except (OSError, ValueError) as exc:
             raise ConfigReadError(filename=str(self._path), reason=str(exc)) from exc
+
+
+def _fsync_directory(directory: Path) -> None:
+    """
+    Make the rename durable.
+
+    The rename has already happened, so a failure here is logged rather than raised:
+    raising would report a changed file as unchanged. Some filesystems refuse to sync
+    a directory at all, and platforms with no directory handle have nothing to sync.
+    """
+    flag = getattr(os, "O_DIRECTORY", None)
+    if flag is None:  # pragma: no cover - Windows
+        return
+    try:
+        fd = os.open(directory, os.O_RDONLY | flag)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        _log.warning("Wrote %s, but could not sync its directory: %s", directory, exc)
