@@ -68,15 +68,15 @@ reason = "Restore Mode belongs to backup."
 
 [[rule]]
 id = "AD-6"
-source_sha256 = "6953ac82bc177624a3d40d25e8a5346b13d2b2aa5a16c5e12895c8dae4fd0e03"
+source_sha256 = "01c83c391f84f93508b32697b9afa9aab12831b6b92718f3b98446fd4c82cfc2"
 binds = false
-reason = "Archive format belongs to backup."
+reason = "Archive format belongs to backup. Re-judged 2026-10-20 after ADR-0014 moved encryption to age through l3io-wp-database: still backup's container, and nothing in it reaches this package."
 
 [[rule]]
 id = "AD-7"
-source_sha256 = "dd86537da9a5ba3cd96ed3ffcf21443d4dedad60207be52302e892823d15acca"
+source_sha256 = "dc81bcfd11150404a31f958643c3c72093363b9e589723b78188b02ae9df70fa"
 binds = false
-reason = "Credential transport to MySQL clients and drivers. This package starts no subprocess and opens no connection; credential-free error text is AD-14's row."
+reason = "Credential transport to MySQL clients and drivers. This package starts no subprocess and opens no connection; credential-free error text is AD-14's row. Re-judged 2026-10-20: ADR-0015 delegates the mechanism to l3io-wp-database, which changes nothing here."
 
 [[rule]]
 id = "AD-8"
@@ -153,9 +153,9 @@ reason = "Run Context belongs to backup's composition roots."
 
 [[rule]]
 id = "AD-17"
-source_sha256 = "7a30c9f9f2d12a6a40ea2feec4bced0b5e7f5f8186c47961330727665f930106"
+source_sha256 = "21c7ea220a8c80b7dc19560e56b3161d286a3ac07f09570a9bee1b09c1d442aa"
 binds = false
-reason = "Restore phase order belongs to backup."
+reason = "Restore phase order belongs to backup. Re-judged 2026-10-20: the DB_NAME cutover now happens at the end of LOAD_DUMP, through the same config write, so it adds a caller, not a rule for this package. That write's own guarantees are AD-18's row."
 
 [[rule]]
 id = "AD-18"
@@ -198,15 +198,15 @@ reason = "Freezes wpbackup2's CLI as shipped at v0.2.21, and names no other CLI.
 
 [[rule]]
 id = "AD-23"
-source_sha256 = "03117f5bd88e6cbc351d75f565733c156b263e8ae4e99605e5a30d0891917cb8"
+source_sha256 = "177fc59dd1dc90a9caf8a3ed60535d9d5a7df40afc4140a329fd1dae9b118333"
 binds = false
-reason = "Archive format detection belongs to backup."
+reason = "Archive format detection belongs to backup. Re-judged 2026-10-20: the amendment (files-only v0 Archives) is backup's alone."
 
 [[rule]]
 id = "AD-24"
-source_sha256 = "658baffffbab14d7f021cc8a56300736ed615aaaf5278400ecff65b1fee8611e"
+source_sha256 = "feb77a44ff6e3610f52ab5c57cd42b159257c0aa2bec08a2d17c256798b528f7"
 binds = false
-reason = "Its Binds line says 'all three packages', but AD-2 forbids this package the opentelemetry-api dependency AD-24 requires. AD-10 carves this package out of structlog explicitly; AD-24 has no matching carve-out. Judged non-binding by AD-2's precedence -- a documents conflict, reported, not resolved here."
+reason = "Its Binds line now names backup and database only, and excludes this package explicitly: AD-2 keeps it at zero runtime dependencies and wins, so it emits no spans and callers trace around it. Re-judged 2026-10-20; the conflict this row used to report is resolved in the spine."
 
 [[rule]]
 id = "AD-25"
@@ -216,9 +216,9 @@ reason = "Flag-to-Restore-Mode mapping belongs to backup."
 
 [[rule]]
 id = "AD-26"
-source_sha256 = "ed7b8b1f11783d961a196b69a2ed4942a83b6fec3d1aff120965334b7329c723"
+source_sha256 = "f6733d1a644ae58562869be80557a1e6170e6ec5ace95d429290159d935b3e0a"
 binds = false
-reason = "Passphrase resolution belongs to backup."
+reason = "Passphrase resolution belongs to backup. Re-judged 2026-10-20: the handoff to l3io-wp-database's passphrase= and the decided default are backup's and database's."
 
 [[rule]]
 id = "AD-27"
@@ -266,9 +266,9 @@ reason = "Superseded by ADR-0012."
 
 [[rule]]
 id = "ADR-0003"
-source_sha256 = "4e6efa156a2f8c347c1e66b322bb4f5e9142c26331b38d281f72bc44e67e1251"
+source_sha256 = "78e542cb4740bb7578152108131d8053128013352d212c71e77ca655cdbb3d0d"
 binds = false
-reason = "MySQL credential transport; see AD-7's row."
+reason = "MySQL credential transport; see AD-7's row. Superseded by ADR-0015 on 2026-10-20."
 
 [[rule]]
 id = "ADR-0004"
@@ -284,13 +284,13 @@ reason = "WP-CLI relocation belongs to backup."
 
 [[rule]]
 id = "ADR-0006"
-source_sha256 = "c1e401318da0907c7dea3eac0bced2783743ffbf9d7baa49fc57434413e4c01e"
+source_sha256 = "76e70c48d3248c895270b653f2ca04c6ad152eb44332c736107f6ce6858b87cd"
 binds = false
-reason = "Archive encryption belongs to backup."
+reason = "Archive encryption belongs to backup. Superseded by ADR-0014 (encryption) on 2026-10-20; its container layout is carried by AD-6."
 
 [[rule]]
 id = "ADR-0007"
-source_sha256 = "62fd5c1a0e4be6d5eae90eba6fd988277a28d60924811990de4a510c78e5f02e"
+source_sha256 = "93486f0b7fa1cd126ceac4954e3b6dca558103f3d5cc82b5f9818375188f024e"
 binds = true
 enforced_by = [
     ".github/workflows/publish.yml::namespace::dependency metadata is clean in BOTH artifacts",
@@ -301,7 +301,6 @@ enforced_by = [
     "tests/test_entry_points.py::test_both_entry_points_run_and_agree",
 ]
 untested = "CI's `uv sync --locked` is an unnamed step, so it holds by being run, not by being checked."
-note = "Its Console scripts section names the script `l3io-wp-config`; the distribution was renamed and the script with it (`l3io-wordpress-config`). The ADR text was not updated -- reported, not resolved here."
 
 [[rule]]
 id = "ADR-0008"
@@ -321,7 +320,7 @@ note = "Ported verbatim from l3io-wordpress-database (its FR-48), the family sha
 
 [[rule]]
 id = "ADR-0010"
-source_sha256 = "b99530de450fe514964b1a0a20d365a75f880a24f170a823c03ae77333c81f2c"
+source_sha256 = "91b8e369cd686f3d52d06f22d6cba908768331e9f433661751b7c3027366430a"
 binds = true
 enforced_by = [
     "tests/test_parser_scope.py::test_type_fidelity",
@@ -349,7 +348,7 @@ enforced_by = [
     "tests/test_value_spans.py::test_a_file_write_of_any_value_verifies_and_lands",
     "tests/test_value_spans.py::test_only_a_file_scope_variable_is_read",
 ]
-not_checkable = "The 'Revisit when' conditions are events in the world, not properties of this code. Condition (a) was met on 2026-10-12, in a stronger form: WordPress-generated salts were cut short and corrupted on write with read-back passing. Fixed within Option C (quote-aware value spans); condition (b) was checked the same day and is not met. The ADR text records neither -- reported, not resolved here."
+not_checkable = "The 'Revisit when' conditions are events in the world, not properties of this code. The ADR now records that condition (a) was met on 2026-10-12 and fixed within Option C, and that (b) is not met."
 
 [[rule]]
 id = "ADR-0011"
@@ -359,22 +358,51 @@ reason = "Its structlog and opentelemetry-api decisions reach this package only 
 
 [[rule]]
 id = "ADR-0012"
-source_sha256 = "928435c5da30bda8aff0432acd6424fde553764504336254d716ac94387b445a"
+source_sha256 = "b8680ed95ef1eed4b210468a0d04b890544a1b0717e6561607e70d2d2ad54d97"
 binds = true
 enforced_by = [
     "tests/test_architecture.py::test_no_init_marker_at_either_namespace_level",
     ".github/workflows/ci.yml::namespace::stub sibling, both install shapes",
 ]
 not_checkable = "The distribution-name pattern and namespace root are checked cross-repository by ../l3io-wordpress-backup/scripts/check-cicd-alignment.py, which this repository cannot run in its own CI."
-note = "Its decision text says the fork republishes at 'a version above 1.4'; the family restarted at 0.0.1 under new names, which removed that constraint's premise. The ADR text was not updated -- reported, not resolved here."
 
 [[rule]]
 id = "ADR-0013"
-source_sha256 = "628f613a5cb3808c2bb854aae86bed280810c5f246b9ccb2c15289c61661a11c"
+source_sha256 = "bb53c1fe42adab9cec954db3c593fc3bb17588b1c0a4844b42202cd78c4ffb45"
 binds = true
 enforced_by = [
     "tests/test_act_dryrun_legs.py::test_every_declared_trigger_has_a_leg",
     "tests/test_act_dryrun_legs.py::test_every_workflow_outside_make_ci_has_at_least_one_leg",
     "tests/test_workflow_gates.py::test_no_workflow_gates_on_env_act",
 ]
-note = "`make ci` runs act under `infisical run`, as the ADR says, since 2026-10-12. Before that this repository passed placeholder secrets instead, which broke every replay outside a TTY."
+note = "Its Infisical line now names project home-lab and path /ci/act/<repo>. This repository's Makefile on main still names the retired project; the fix is cbc7bc8 on branch infisical-home-lab, not yet merged. Its service-container and database-image lines do not apply: this package uses no database."
+
+[[rule]]
+id = "AD-30"
+source_sha256 = "b13c475199ac76950a220c785a50e649e8d8851b6ada68f27625a4e406c9d2ac"
+binds = true
+enforced_by = [
+    "tests/test_package_version.py::test_version_is_resolvable",
+    "tests/test_package_version.py::test_pyproject_declares_the_version_dynamic",
+    "tests/test_package_version.py::test_the_version_source_is_the_vcs",
+    "tests/test_package_version.py::test_dev_builds_carry_no_local_version_label",
+    "tests/test_package_version.py::test_only_three_component_tags_are_candidates",
+    "tests/test_package_version.py::test_no_module_carries_a_version_literal",
+    "tests/test_package_version.py::test_every_workflow_checkout_fetches_tags",
+    "tests/test_workflow_gates.py::test_no_floating_tag_starts_a_workflow",
+    "tests/test_workflow_gates.py::test_the_latest_release_lookup_ignores_floating_tags",
+    "tests/test_workflow_gates.py::test_release_notes_never_start_from_a_floating_tag",
+]
+note = "Every clause has an enforcer here: no literal, hatch-vcs source, no local segment, three-component tags only, full-history checkouts, floating tags neither publish nor serve as a basis. This repository cited AD-30 before the spine defined it; the spine now does."
+
+[[rule]]
+id = "ADR-0014"
+source_sha256 = "bc8c6e5875b0fcb8bff2e90ecf1633b4211135cacdf9c31cc5a6c3f5a78551f2"
+binds = false
+reason = "Archive encryption, by age through l3io-wp-database. Backup's and database's; this package touches no archive and no key."
+
+[[rule]]
+id = "ADR-0015"
+source_sha256 = "89b2f135d34a5e3f53ad9c32bca1c8b138ee122a907605d7f80415a483dbe943"
+binds = false
+reason = "Credential transport to MySQL client tools, delegated to l3io-wp-database. This package invokes no client tool and holds no credential beyond the text it reads; see AD-7's row."

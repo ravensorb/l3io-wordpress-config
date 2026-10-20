@@ -59,11 +59,12 @@ file left), and by `make ci` under act: 11 of 11.
 - [blocked] **Merge, push and release `v0.1.1`** — Shawn's. After merging to `main`:
   `gh workflow run release.yml -f bump=patch`. Then tell backup the tag is live; it pins
   `v0.1.1`. `l3io-wordpress-database` does not write files through this package.
-- [todo] **Traceability drift, pre-existing:** backup's governing documents changed
-  2026-10-20 (`a865618`): AD-30, ADR-0014 and ADR-0015 have no row, and 12 more rules
-  (AD-6, -7, -17, -23, -24, -26; ADR-0003, -0006, -0007, -0010, -0012, -0013) need
-  re-judging. Only AD-18 was re-judged here, because this fix is its new requirement 4.
-  `make check` fails locally on that one test until they are; CI skips it.
+- [done] **Traceability re-judged** against backup's `a865618`. Every drifted row was
+  diffed against the text it was last judged on, recovered from backup's history by its
+  stored hash, not just re-hashed. New rows: AD-30 binds and every clause has an
+  enforcer here; ADR-0014 and ADR-0015 do not bind. AD-24 now excludes this package
+  explicitly. ADR-0007, -0010 and -0012 now say what this table reported missing, so
+  those notes are gone, and open item 4 below is closed.
 - [todo] **`make ci` on `main` uses the retired Infisical project.** `cbc7bc8` on the
   unmerged branch `infisical-home-lab` fixes the Makefile. Separately, this session's
   shell had no `INFISICAL_API_URL`, so the CLI went to `app.infisical.com` and got 403;
@@ -84,12 +85,8 @@ file left), and by `make ci` under act: 11 of 11.
    fix; that is already in its handoff.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
    AD-15: nothing reaches PyPI until all three packages can.
-4. [blocked] **Fixes to backup's documents**, which belong to backup:
-   - AD-30 is cited but undefined;
-   - AD-24 conflicts with AD-2;
-   - ADR-0007 names the old script;
-   - ADR-0010 should record that its revisit condition (a) was met and fixed;
-   - ADR-0012 cites "a version above 1.4".
+4. [done] **Fixes to backup's documents**: all five landed in backup by 2026-10-20
+   (AD-30 defined, AD-24 excludes config, ADR-0007, -0010 and -0012 corrected).
 5. [blocked] Doctor Check 24: whether the family gets a `CLAUDE.md` agent block.
 6. [todo] Optional: the PHP 8.4 check (300 random configs written by `set()`, read back
    by PHP) as a local-only test, skipped without docker. It is the only grader
