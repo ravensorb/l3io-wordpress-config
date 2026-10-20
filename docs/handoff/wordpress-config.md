@@ -41,6 +41,35 @@ state tree is empty by design.
 - `make ci` replays the pipeline under act via `infisical run`, and leaves nothing in the
   working tree.
 
+## 2026-10-20: write-permission defect, fix ready for 0.1.1
+
+Reported by `l3io-wordpress-backup` (session cmvgs1vhh0gy7tf01cfd5vtqt) and reproduced
+against `v0.1.0`: `WpConfigFile.set()` wrote a temp file under the umask and renamed it
+over the original, so a `0640` wp-config.php came back `0644` and DB_PASSWORD became
+world-readable. It also did not fsync, used a fixed temp name that a planted symlink
+redirected, and dropped the owner when run as root. Fixed on branch
+`fix/write-preserves-mode`: `mkstemp` in the same directory, the original's
+owner/group then mode copied on before any content is written, file fsync, rename,
+directory fsync. Decided: an owner that cannot be kept refuses the write
+(`ConfigWriteError`, original untouched), and the package never creates a wp-config.php.
+Nine new tests failed on v0.1.0 before the fix. Verified on the built wheel in a clean
+venv, as root in a container (`www-data` 33:33 `0640` kept; a non-owner refused, no temp
+file left), and by `make ci` under act: 11 of 11.
+
+- [blocked] **Merge, push and release `v0.1.1`** — Shawn's. After merging to `main`:
+  `gh workflow run release.yml -f bump=patch`. Then tell backup the tag is live; it pins
+  `v0.1.1`. `l3io-wordpress-database` does not write files through this package.
+- [todo] **Traceability drift, pre-existing:** backup's governing documents changed
+  2026-10-20 (`a865618`): AD-30, ADR-0014 and ADR-0015 have no row, and 12 more rules
+  (AD-6, -7, -17, -23, -24, -26; ADR-0003, -0006, -0007, -0010, -0012, -0013) need
+  re-judging. Only AD-18 was re-judged here, because this fix is its new requirement 4.
+  `make check` fails locally on that one test until they are; CI skips it.
+- [todo] **`make ci` on `main` uses the retired Infisical project.** `cbc7bc8` on the
+  unmerged branch `infisical-home-lab` fixes the Makefile. Separately, this session's
+  shell had no `INFISICAL_API_URL`, so the CLI went to `app.infisical.com` and got 403;
+  `INFISICAL_API_URL=https://secops.ravenwolf.org/api` fixed it. That is the host's
+  environment, not this repo's.
+
 ## Open
 
 1. [done] **Floating version tags enabled** (Shawn, 2026-10-12), matching backup. They take

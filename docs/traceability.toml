@@ -159,13 +159,18 @@ reason = "Restore phase order belongs to backup."
 
 [[rule]]
 id = "AD-18"
-source_sha256 = "cd417a250d2f700dec4d165b24d197368c99d793daade18cfeef01bb3346d79e"
+source_sha256 = "6886442d727913f9e56beaa958afc5ecd4d57b604c6ab5ea115aadd40a967290"
 binds = true
 enforced_by = [
     "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
     "tests/test_file_adapter.py::test_no_temporary_file_is_left_behind",
+    "tests/test_file_adapter.py::test_a_write_keeps_the_original_mode",
+    "tests/test_file_adapter.py::test_a_write_keeps_the_original_group",
+    "tests/test_file_adapter.py::test_ownership_that_cannot_be_kept_refuses_the_write",
+    "tests/test_file_adapter.py::test_a_planted_temp_name_is_never_written_through",
+    "tests/test_file_adapter.py::test_the_write_is_flushed_to_disk_before_and_after_the_rename",
 ]
-note = "Only requirement 2, the atomic config write, which backup delegates to this package. Journal and staging cutover are backup's."
+note = "Requirements 2 and 4: the atomic config write, which backup delegates to this package, and that it keeps the file's mode. Journal and staging cutover are backup's. Ownership is kept when permitted and the write is refused when not; a non-root writer of a file owned by another user is refused rather than taking it over."
 
 [[rule]]
 id = "AD-19"
