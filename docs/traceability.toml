@@ -375,7 +375,7 @@ enforced_by = [
     "tests/test_act_dryrun_legs.py::test_every_workflow_outside_make_ci_has_at_least_one_leg",
     "tests/test_workflow_gates.py::test_no_workflow_gates_on_env_act",
 ]
-note = "Its Infisical line now names project home-lab and path /ci/act/<repo>. This repository's Makefile on main still names the retired project; the fix is cbc7bc8 on branch infisical-home-lab, not yet merged. Its service-container and database-image lines do not apply: this package uses no database."
+note = "Its Infisical line now names project home-lab and path /ci/act/<repo>. This repository's Makefile matches it since cbc7bc8. Its service-container and database-image lines do not apply: this package uses no database."
 
 [[rule]]
 id = "AD-30"

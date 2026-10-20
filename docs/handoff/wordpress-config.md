@@ -56,7 +56,7 @@ Nine new tests failed on v0.1.0 before the fix. Verified on the built wheel in a
 venv, as root in a container (`www-data` 33:33 `0640` kept; a non-owner refused, no temp
 file left), and by `make ci` under act: 11 of 11.
 
-- [blocked] **Merge, push and release `v0.1.1`** — Shawn's. After merging to `main`:
+- [blocked] **Release `v0.1.1`** — Shawn's. Merged and pushed 2026-10-20; next is
   `gh workflow run release.yml -f bump=patch`. Then tell backup the tag is live; it pins
   `v0.1.1`. `l3io-wordpress-database` does not write files through this package.
 - [done] **Traceability re-judged** against backup's `a865618`. Every drifted row was
@@ -65,11 +65,10 @@ file left), and by `make ci` under act: 11 of 11.
   enforcer here; ADR-0014 and ADR-0015 do not bind. AD-24 now excludes this package
   explicitly. ADR-0007, -0010 and -0012 now say what this table reported missing, so
   those notes are gone, and open item 4 below is closed.
-- [todo] **`make ci` on `main` uses the retired Infisical project.** `cbc7bc8` on the
-  unmerged branch `infisical-home-lab` fixes the Makefile. Separately, this session's
-  shell had no `INFISICAL_API_URL`, so the CLI went to `app.infisical.com` and got 403;
-  `INFISICAL_API_URL=https://secops.ravenwolf.org/api` fixed it. That is the host's
-  environment, not this repo's.
+- [done] **`make ci` uses the home-lab Infisical project** since `cbc7bc8`, merged
+  2026-10-20. Separately, this session's shell had no `INFISICAL_API_URL`, so the CLI
+  went to `app.infisical.com` and got 403; `INFISICAL_API_URL=https://secops.ravenwolf.org/api`
+  fixed it. That is the host's environment, not this repo's.
 
 ## Open
 
