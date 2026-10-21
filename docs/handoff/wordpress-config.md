@@ -78,14 +78,13 @@ file left), and by `make ci` under act: 11 of 11.
 
 1. [done] **Floating version tags enabled** (Shawn, 2026-10-12), matching backup. They take
    effect on the next real release; none exist yet. Config narrowed `publish.yml`'s push
-   filter to `v*.*.*`. Backup's is still `v*`, which would start a publish on a hand-pushed
-   floating tag. That is backup's to adopt.
-2. [todo] **Siblings: release notes break once floating tags exist.** Backup moves floating
-   tags and its changelog step sets no `from-tag`, so every release after its first will
-   publish "no changes". Database would hit the same if it enabled floating tags. The fix
-   is config's `14512f0`: a step that resolves the previous `v*.*.*` tag, passed as
-   `from-tag`. Database must also repin from `v0.0.2` to `v0.1.0` to receive the parser
-   fix; that is already in its handoff.
+   filter to `v*.*.*`; backup has since done the same (item 2).
+2. [done] **Siblings: release notes once floating tags exist.** Backup adopted config's
+   `14512f0` itself in `d85713f` (2026-10-20, on its unpushed branch `infisical-home-lab`):
+   a `previous` step resolving the last `v*.*.*` tag, passed as `from-tag`, with the push
+   filter narrowed to `v*.*.*` and both guarded in its
+   `tests/contracts/test_workflow_invariants.py`. Database has no floating tags; it pins
+   config's `v0.1.0` tag in its dev lock, harmless because it never writes the file.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
    AD-15: nothing reaches PyPI until all three packages can.
 4. [done] **Fixes to backup's documents**: all five landed in backup by 2026-10-20
