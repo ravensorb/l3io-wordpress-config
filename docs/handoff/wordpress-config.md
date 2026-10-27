@@ -93,7 +93,8 @@ file left), and by `make ci` under act: 11 of 11.
 6. [todo] Optional: the PHP 8.4 check (300 random configs written by `set()`, read back
    by PHP) as a local-only test, skipped without docker. It is the only grader
    independent of the scanner.
-7. [todo] The Gitea registry contents have not been re-read since 2026-10-03.
+7. [done] **Gitea registry re-read 2026-10-27:** it holds 0.0.2, 0.1.0 and 0.1.1 (wheel and
+   sdist each), the same set as GitHub Releases. No retired version or dev build remains.
 8. [done] **FR-45 ported** from database's `cc107fb`, plus `make audit` from `0c4e3cf`:
    `.github/workflows/security-audit.yml`, unchanged except its header. Proved not vacuous
    with a planted dev-only `urllib3==1.26.4` (22 advisories, exit 1). All four triggers
