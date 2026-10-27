@@ -74,6 +74,26 @@ file left), and by `make ci` under act: 11 of 11.
   went to `app.infisical.com` and got 403; `INFISICAL_API_URL=https://secops.ravenwolf.org/api`
   fixed it. That is the host's environment, not this repo's.
 
+## 2026-10-27: CI/CD alignment with `l3io-wordpress-database` (Shawn's request)
+
+Worked out with "wordpress-database - agent 1" (Cursor, cmv567lc34jehtf013cb1ckqh),
+reached through `happier session send` because `SendMessage` cannot reach a Cursor session.
+Baseline: backup's `scripts/check-cicd-alignment.py` reports config, database and backup
+**OK**. Already the same: Python 3.11–3.14, OS Independent, ubuntu-latest, uv `==0.11.6`,
+the action pins, the four workflows and their triggers, the release-to-publish flow, the
+`v*.*.*` publish filter, release notes from the previous release tag, the namespace check,
+and act with home-lab Infisical. Both have released to GitHub through the workflows.
+
+| # | Item | Owner | State |
+|---|---|---|---|
+| D1 | database `main` green: ruff format, coverage >= 87, `opentelemetry` past GHSA-xcq7-p3pf-p88h | database | in its working tree, not committed |
+| D2 | database moves floating `v<major>`/`v<major>.<minor>` tags, ordering test ported | database | in its working tree |
+| D3 | database collapses Python under act | — | **kept, agreed**: every Python × engine leg starts a service on 3306 |
+| D4 | publish: `tag-info` in version-gate; GitHub release waits on `publish-pypi` | database | in its working tree; equivalent to config's |
+| C1 | config adopts database's ruff set (`ARG`, `TRY`, `EM`, `S`, same `tests/*` ignores) | config | `1e9a9d0`, not pushed |
+| F1 | add checks for D2, D4 and C1 to backup's `check-cicd-alignment.py`, so alignment is enforced, not remembered | backup | to propose once D1–D4 land |
+| F2 | `l3io-age-passphrase` (ADR-0014's binder, a new family package) fails the checker: 21 findings and its name | ? | [blocked] Shawn: bring it to the standard, or let the name rule admit `l3io-<area>` |
+
 ## Open
 
 1. [done] **Floating version tags enabled** (Shawn, 2026-10-12), matching backup. They take
