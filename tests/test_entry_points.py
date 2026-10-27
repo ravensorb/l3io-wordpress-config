@@ -25,7 +25,7 @@ def _project() -> dict[str, Any]:
 
 
 def _run(*argv: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(argv, capture_output=True, text=True, timeout=60, check=False)
+    return subprocess.run(argv, capture_output=True, text=True, timeout=60, check=False)  # noqa: S603 - the test's own fixed argv
 
 
 def test_the_one_console_script_is_named_for_the_distribution() -> None:

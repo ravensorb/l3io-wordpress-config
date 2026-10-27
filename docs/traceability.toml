@@ -159,7 +159,7 @@ reason = "Restore phase order belongs to backup. Re-judged 2026-10-20: the DB_NA
 
 [[rule]]
 id = "AD-18"
-source_sha256 = "6886442d727913f9e56beaa958afc5ecd4d57b604c6ab5ea115aadd40a967290"
+source_sha256 = "6fcdcc44c428bedca55015fad4cd103954361825718ca5b010cdbf4945cd56bb"
 binds = true
 enforced_by = [
     "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
@@ -192,7 +192,7 @@ reason = "Archive streaming belongs to backup."
 
 [[rule]]
 id = "AD-22"
-source_sha256 = "6f2939f7a95f38a2ceea10ff2c0365a3e9ce242425a240621b4257ee0fd2d908"
+source_sha256 = "d54db8f857af534126e99248a046557c4506185de7789e20597d25a8e2114b47"
 binds = false
 reason = "Freezes wpbackup2's CLI as shipped at v0.2.21, and names no other CLI. This package's console-script naming is ADR-0007's row."
 
@@ -358,7 +358,7 @@ reason = "Its structlog and opentelemetry-api decisions reach this package only 
 
 [[rule]]
 id = "ADR-0012"
-source_sha256 = "b8680ed95ef1eed4b210468a0d04b890544a1b0717e6561607e70d2d2ad54d97"
+source_sha256 = "7822bf4ce21e70a603ba8bbd367808826dd22313c6c2eeecb9943782a1919fa3"
 binds = true
 enforced_by = [
     "tests/test_architecture.py::test_no_init_marker_at_either_namespace_level",
@@ -397,9 +397,9 @@ note = "Every clause has an enforcer here: no literal, hatch-vcs source, no loca
 
 [[rule]]
 id = "ADR-0014"
-source_sha256 = "bc8c6e5875b0fcb8bff2e90ecf1633b4211135cacdf9c31cc5a6c3f5a78551f2"
+source_sha256 = "e9bd0a3427e6792cf93bc87e11b30b0b3398775db8ecbc63d28984fe3c8c0eb9"
 binds = false
-reason = "Archive encryption, by age through l3io-wp-database. Backup's and database's; this package touches no archive and no key."
+reason = "Archive encryption, by age through l3io-wp-database. Backup's and database's; this package touches no archive and no key. Re-judged 2026-10-27 after the passphrase amendment (binder package l3io-age-passphrase, age CLI fallback): still not this package's."
 
 [[rule]]
 id = "ADR-0015"

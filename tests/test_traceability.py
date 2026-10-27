@@ -167,10 +167,12 @@ def governing_rules(files: dict[str, str]) -> dict[str, str]:
     """
     spines = [p for p in files if fnmatch(p, SPINE_PATTERN)]
     if len(spines) != 1:
-        raise AssertionError(f"expected exactly one {SPINE_PATTERN}, found {spines}")
+        msg = f"expected exactly one {SPINE_PATTERN}, found {spines}"
+        raise AssertionError(msg)
     rules = {rid: sha(text) for rid, text in ad_sections(files[spines[0]]).items()}
     if not rules:
-        raise AssertionError(f"no '### AD-n' headings in {spines[0]}")
+        msg = f"no '### AD-n' headings in {spines[0]}"
+        raise AssertionError(msg)
     for path, text in files.items():
         if fnmatch(path, ADR_PATTERN):
             rules[f"ADR-{Path(path).name[:4]}"] = sha(text)
@@ -201,8 +203,11 @@ def committed_files(repo: Path) -> dict[str, str]:
     """{path: text} for the spine and ADRs at the sibling's HEAD."""
 
     def git(*args: str) -> str:
-        return subprocess.run(
-            ["git", "-C", str(repo), *args], check=True, capture_output=True, text=True
+        return subprocess.run(  # noqa: S603 - git with fixed arguments and a path
+            ["git", "-C", str(repo), *args],  # noqa: S607 - git from PATH, as in every dev shell
+            check=True,
+            capture_output=True,
+            text=True,
         ).stdout
 
     paths = git("ls-tree", "-r", "--name-only", "HEAD").splitlines()

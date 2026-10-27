@@ -98,7 +98,13 @@ src = ["src", "tests", "tools"]
 extend-exclude = ["_bmad", "_bmad-output", ".claude", ".agents"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "PTH", "RET", "BLE"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "PTH", "RET", "BLE", "ARG", "TRY", "EM", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# The same rule set and test exemptions as l3io-wordpress-database, so the family lints
+# alike. S101 asserts are the point of a test; S105-S107 flag the fake credentials a
+# credential test must construct.
+"tests/*" = ["S101", "S105", "S106", "S107", "ARG"]
 
 [tool.mypy]
 strict = true

@@ -80,7 +80,7 @@ print("  ok:", len(l3io.wp.__path__), "path entry/entries:", *l3io.wp.__path__)
 
 
 def run(*args: str, cwd: Path | None = None) -> None:
-    subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True)
+    subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True)  # noqa: S603 - fixed uv argv
 
 
 def build_stub(root: Path) -> Path:
@@ -100,7 +100,9 @@ def check(label: str, env_root: Path, *install: str) -> bool:
     run("uv", "venv", "--python", "3.11", "-q", str(env_root / ".venv"))
     python = env_root / ".venv" / "bin" / "python"
     run("uv", "pip", "install", "--python", str(python), "-q", *install)
-    result = subprocess.run([str(python), "-c", PROBE], capture_output=True, text=True)
+    result = subprocess.run(  # noqa: S603 - the venv's own python and a fixed probe
+        [str(python), "-c", PROBE], capture_output=True, text=True, check=False
+    )
     sys.stdout.write(result.stdout)
     if result.returncode != 0:
         sys.stderr.write(result.stderr)

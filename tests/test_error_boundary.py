@@ -154,7 +154,8 @@ def test_a_file_that_turns_hostile_after_opening_is_reported_as_ours(tmp_path: P
 
 def test_the_leak_check_reports_a_foreign_exception() -> None:
     def raises_value_error() -> None:
-        raise ValueError("planted")
+        msg = "planted"
+        raise ValueError(msg)
 
     assert leak(raises_value_error) == "ValueError: planted"
 

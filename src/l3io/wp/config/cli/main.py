@@ -80,10 +80,11 @@ def run(argv: list[str] | None = None) -> int:
             print(f"{args.key} is not defined in {args.filename}", file=sys.stderr)
             return EXIT_NOT_DEFINED
         print(_format(value))
-        return EXIT_OK
     except WpConfigError as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_FAILED
+    else:
+        return EXIT_OK
 
 
 def main() -> None:  # pragma: no cover - thin console-script shim
