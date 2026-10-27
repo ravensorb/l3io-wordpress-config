@@ -91,8 +91,8 @@ and act with home-lab Infisical. Both have released to GitHub through the workfl
 | D3 | database collapses Python under act | — | **kept, agreed**: every Python × engine leg starts a service on 3306. The family rule: collapse any axis that multiplies host-bound services |
 | D4 | publish: `tag-info` in version-gate; GitHub release waits on `publish-pypi` | database | done, `d0d0cb9`; equivalent to config's (database runs AD-27 inside `smoke`) |
 | C1 | config adopts database's ruff set (`ARG`, `TRY`, `EM`, `S`, same `tests/*` ignores) | config | `1e9a9d0`, not pushed |
-| F1 | add checks for D2, D3's rule, D4 and C1 to backup's `check-cicd-alignment.py`, so alignment is enforced, not remembered | backup | proposed 2026-10-27; awaiting backup |
-| F2 | `l3io-age-passphrase` (database's PyO3 binder) is picked up by the checker's `../*` glob: 21 findings | backup | database owns the binder, and it is not an `l3io.wp` package. Agreed: narrow the checker's scope, derived not hand-listed (config prefers "ships `src/l3io/wp/<area>`", database suggested the `l3io-wordpress-*` name), and print skipped repos. Proposed to backup |
+| F1 | add checks for D2, D3's rule, D4 and C1 to backup's `check-cicd-alignment.py`, so alignment is enforced, not remembered | backup | [blocked] Shawn. Backup accepts in principle (2026-10-27) and conforms on D2 and D4, but not C1 (ruff set: 9 findings) nor D3's rule (its verify-install collapses Python with no services). Its plan: four checks, each proved by a planted violation, with backup brought into line in the same change |
+| F2 | `l3io-age-passphrase` (database's PyO3 binder) is picked up by the checker's `../*` glob: 21 findings | backup | database owns the binder, and it is not an `l3io.wp` package. Agreed: narrow the checker's scope, derived not hand-listed (config prefers "ships `src/l3io/wp/<area>`", database suggested the `l3io-wordpress-*` name), and print skipped repos. [blocked] Shawn; backup agrees with the derived rule |
 
 ## Open
 
@@ -100,10 +100,10 @@ and act with home-lab Infisical. Both have released to GitHub through the workfl
    effect on the next real release; none exist yet. Config narrowed `publish.yml`'s push
    filter to `v*.*.*`; backup has since done the same (item 2).
 2. [done] **Siblings: release notes once floating tags exist.** Backup adopted config's
-   `14512f0` itself in `d85713f` (2026-10-20, on its unpushed branch `infisical-home-lab`):
+   `14512f0` itself in `d85713f` (2026-10-20, on backup's `origin/main` since 2026-10-27, with v0.0.1 released):
    a `previous` step resolving the last `v*.*.*` tag, passed as `from-tag`, with the push
    filter narrowed to `v*.*.*` and both guarded in its
-   `tests/contracts/test_workflow_invariants.py`. Database has no floating tags; it pins
+   `tests/contracts/test_workflow_invariants.py`. Database adopted floating tags on 2026-10-27 (D2 below); it pins
    config's `v0.1.0` tag in its dev lock, harmless because it never writes the file.
 3. [blocked] **Publish to PyPI**, and **make the `liquidlogiclabs` Gitea org public**.
    AD-15: nothing reaches PyPI until all three packages can.
