@@ -15,7 +15,7 @@ current state only.
 family, and the gate on the other two. Work arrives as handoffs, not l3io-pm epics, so the
 state tree is empty by design.
 
-## Current state (2026-10-20)
+## Current state (2026-10-29)
 
 - Last release: **`v0.1.1`** (2026-10-20), the write-permission fix below. Before it,
   **`v0.1.0`** (2026-10-12, Shawn), on GitHub Releases and the internal Gitea
@@ -74,6 +74,33 @@ file left), and by `make ci` under act: 11 of 11.
   went to `app.infisical.com` and got 403; `INFISICAL_API_URL=https://secops.ravenwolf.org/api`
   fixed it. That is the host's environment, not this repo's.
 
+## 2026-10-29: scanner defects found by real configs, fixed for 0.1.2
+
+Shawn asked whether the tests were solid against real configs. They covered one
+fixture. Probing real shapes, with PHP 8.4 as the judge, found four defects, all fixed
+test-first on branch `fix/comments-and-case` (`9597931`):
+
+- a define inside a multi-line `/* */` comment was read as live, so `get('DB_NAME')`
+  could return a commented-out old value; a key only in a comment was "written" into
+  the comment with success reported, and with a `*/` in the value the file became a PHP
+  syntax error;
+- `DEFINE(...)` was not read, so `set()` added a duplicate;
+- every write turned a CRLF file to LF; WordPress ships its sample with CRLF;
+- adding a key to CRLF content raised.
+
+`462a291` adds the real-config corpus (`tests/fixtures/wp-config/`, expectations
+recorded from PHP by `tools/record_corpus_expectations.py`) and the PHP oracle
+(`tests/test_php_oracle.py`, which is open item 6). CI requires the oracle through
+`L3IO_REQUIRE_PHP_ORACLE=1`. 321 tests, 95.80% coverage, floor 95.5. `make ci` under act
+passes 11 of 11, and the built wheel in a clean venv passes every reproduction.
+
+- [blocked] **Merge, push and release `v0.1.2`** — Shawn's. Then tell backup to pin
+  `>=0.1.2,<0.2`. Its ADR-0023 overwrite path calls `WpConfigString.set` on the
+  Archive's config text, so the comment and CRLF fixes reach that path too.
+- [todo] Design point, not fixed: on the Docker image's config, `set('DB_NAME', ...)`
+  replaces `getenv_docker(...)` with a literal. That is correct per ADR-0010, but it
+  silently turns an environment-driven value into a fixed one.
+
 ## 2026-10-27: CI/CD alignment with `l3io-wordpress-database` (Shawn's request)
 
 Worked out with "wordpress-database - agent 1" (Cursor, cmv567lc34jehtf013cb1ckqh),
@@ -110,9 +137,8 @@ and act with home-lab Infisical. Both have released to GitHub through the workfl
 4. [done] **Fixes to backup's documents**: all five landed in backup by 2026-10-20
    (AD-30 defined, AD-24 excludes config, ADR-0007, -0010 and -0012 corrected).
 5. [blocked] Doctor Check 24: whether the family gets a `CLAUDE.md` agent block.
-6. [todo] Optional: the PHP 8.4 check (300 random configs written by `set()`, read back
-   by PHP) as a local-only test, skipped without docker. It is the only grader
-   independent of the scanner.
+6. [done] **The PHP 8.4 oracle** (2026-10-29): `tests/test_php_oracle.py`, with 300 random
+   writes and the real-config corpus. It runs in CI and under act, not only locally.
 7. [done] **Gitea registry re-read 2026-10-27:** it holds 0.0.2, 0.1.0 and 0.1.1 (wheel and
    sdist each), the same set as GitHub Releases. No retired version or dev build remains.
 8. [done] **FR-45 ported** from database's `cc107fb`, plus `make audit` from `0c4e3cf`:
