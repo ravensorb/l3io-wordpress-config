@@ -247,3 +247,32 @@ def test_a_directory_that_cannot_be_synced_still_reports_the_write(
     assert WpConfigFile(config_file).set("DB_NAME", "updated") is True
     assert WpConfigFile(config_file).get("DB_NAME") == "updated"
     assert "could not sync its directory" in caplog.text
+
+
+# --- A write changes one value, not the file's line endings ----------------------
+#
+# WordPress's own wp-config-sample.php and the Docker image's config use CRLF. v0.1.1
+# read and wrote in text mode, so every write rewrote every line ending to LF.
+
+
+def test_a_crlf_file_keeps_its_line_endings(tmp_path):
+    path = tmp_path / "wp-config.php"
+    original = b"<?php\r\ndefine( 'DB_NAME', 'a' );\r\ndefine( 'DB_USER', 'u' );\r\n"
+    path.write_bytes(original)
+    WpConfigFile(path).set("DB_NAME", "b")
+    assert path.read_bytes() == original.replace(b"'a'", b"'b'")
+
+
+def test_a_key_is_added_to_a_crlf_file_with_a_crlf(tmp_path):
+    path = tmp_path / "wp-config.php"
+    path.write_bytes(b"<?php\r\ndefine( 'DB_NAME', 'a' );\r\n")
+    WpConfigFile(path).set("WP_CACHE", True)
+    assert (
+        path.read_bytes() == b"<?php\r\ndefine('WP_CACHE', true);\r\ndefine( 'DB_NAME', 'a' );\r\n"
+    )
+
+
+def test_content_is_reported_as_it_is_on_disk(tmp_path):
+    path = tmp_path / "wp-config.php"
+    path.write_bytes(b"<?php\r\ndefine( 'DB_NAME', 'a' );\r\n")
+    assert WpConfigFile(path).content == "<?php\r\ndefine( 'DB_NAME', 'a' );\r\n"

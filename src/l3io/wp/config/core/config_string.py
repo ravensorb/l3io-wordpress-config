@@ -11,6 +11,7 @@ limits and the read-back verification that guards them.
 
 from __future__ import annotations
 
+import bisect
 import math
 import re
 from dataclasses import dataclass
@@ -52,8 +53,10 @@ _VALUE = rf"(?:{_QUOTED}|[^'\"\n])*?"
 # Anchored at line start so a commented-out `// define(...)` never matches; that
 # anchor is load-bearing. Leading whitespace is allowed:
 # WP-CLI writes WP_DEBUG indented inside an `if ( ! defined(...) )` block.
+# `define` in any case: PHP function names are case-insensitive, so `DEFINE(...)`
+# is a definition, and missing it made `set()` add a second one.
 _DEFINE_RE = re.compile(
-    rf"^[ \t]*define\s*\(\s*'(?P<key>(?:[^'\\]|\\.)*)'\s*,\s*(?P<value>{_VALUE})\s*\)\s*;",
+    rf"^[ \t]*(?i:define)\s*\(\s*'(?P<key>(?:[^'\\]|\\.)*)'\s*,\s*(?P<value>{_VALUE})\s*\)\s*;",
     re.MULTILINE,
 )
 
@@ -63,6 +66,17 @@ _DEFINE_RE = re.compile(
 _VARIABLE_RE = re.compile(
     rf"^\$(?P<key>[A-Za-z_]\w*)\s*=\s*(?P<value>{_VALUE})\s*;",
     re.MULTILINE,
+)
+
+# What PHP does not execute, in the order PHP's lexer meets it: a quoted string
+# (so `/*` inside a salt is data), a block comment (to its first `*/`, or the end
+# of the file if unterminated, and quotes inside it mean nothing), and a line
+# comment, which the line-start anchors above already make invisible but which
+# must still be consumed so a `/*` inside one opens nothing. `#[` is a PHP 8
+# attribute, not a comment. Heredoc and nowdoc are not recognised (ADR-0010).
+_NON_CODE_RE = re.compile(
+    r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"|/\*.*?(?:\*/|\Z)|(?://|#(?!\[))[^\n]*",
+    re.DOTALL,
 )
 
 #: Each shape and the pattern that finds it. Annotated so the Literal survives.
@@ -79,6 +93,9 @@ _INT_RE = re.compile(r"^[+-]?\d+$")
 # syntax error that takes the site down.
 _IDENTIFIER_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _PHP_OPEN = "<?php\n"
+# The opening tag and the line ending after it. A constant is inserted after the
+# first one, ending in that same newline: WordPress's own sample uses CRLF.
+_PHP_OPEN_RE = re.compile(r"<\?php(\r?\n)")
 
 
 @dataclass(frozen=True)
@@ -99,8 +116,31 @@ class Constant:
     """The whole matched ``define(...);`` as it appears in the source."""
 
 
+def _block_comments(content: str) -> tuple[list[int], list[int]]:
+    """Start and end offsets of every ``/* ... */`` comment, in source order."""
+    starts: list[int] = []
+    ends: list[int] = []
+    for m in _NON_CODE_RE.finditer(content):
+        if m.group().startswith("/*"):
+            starts.append(m.start())
+            ends.append(m.end())
+    return starts, ends
+
+
 def scan(content: str) -> list[Constant]:
-    """Every ``define()`` and file-scope variable assignment, in source order."""
+    """
+    Every ``define()`` and file-scope variable assignment, in source order.
+
+    A statement inside a block comment is not one: PHP never runs it. Line
+    comments need no filter here, because both patterns are anchored at the start
+    of a line.
+    """
+    starts, ends = _block_comments(content)
+
+    def commented(offset: int) -> bool:
+        i = bisect.bisect_right(starts, offset) - 1
+        return i >= 0 and offset < ends[i]
+
     found = [
         Constant(
             kind=kind,
@@ -112,6 +152,7 @@ def scan(content: str) -> list[Constant]:
         )
         for kind, pattern in _PATTERNS
         for m in pattern.finditer(content)
+        if not commented(m.start("key"))
     ]
     found.sort(key=lambda c: c.start)
     return found
@@ -256,7 +297,8 @@ class WpConfigString:
             _log.debug("%r updated.", key)
             return True
 
-        if _PHP_OPEN not in self._content:
+        opening = _PHP_OPEN_RE.search(self._content)
+        if opening is None:
             raise ConfigWriteError(
                 filename="<string>",
                 reason=f"no {_PHP_OPEN!r} opening tag to insert after",
@@ -264,8 +306,9 @@ class WpConfigString:
             )
 
         statement = render_statement(kind, key, value)
-        # count=1: insert after the FIRST opening tag only. Without it, a file
-        # carrying two `<?php` markers receives two copies of the statement.
-        self._content = self._content.replace(_PHP_OPEN, _PHP_OPEN + statement + "\n", 1)
+        # After the FIRST opening tag only: a file carrying two `<?php` markers
+        # must not receive two copies of the statement.
+        at = opening.end()
+        self._content = self._content[:at] + statement + opening.group(1) + self._content[at:]
         _log.debug("%r added.", key)
         return True

@@ -133,3 +133,10 @@ define('WP_DEBUG', true);
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_a_key_is_inserted_after_a_crlf_opening_tag():
+    """WordPress's own sample opens `<?php\\r\\n`; insertion used to need `<?php\\n`."""
+    config = WpConfigString("<?php\r\ndefine( 'DB_NAME', 'a' );\r\n")
+    assert config.set("WP_CACHE", True) is True
+    assert config.content == "<?php\r\ndefine('WP_CACHE', true);\r\ndefine( 'DB_NAME', 'a' );\r\n"

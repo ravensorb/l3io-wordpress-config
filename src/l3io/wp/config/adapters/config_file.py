@@ -135,7 +135,8 @@ class WpConfigFile:
         tmp = Path(name)
         committed = False
         try:
-            with os.fdopen(fd, "w+", encoding="utf-8") as handle:
+            # newline="": no translation either way, so a CRLF file stays CRLF.
+            with os.fdopen(fd, "w+", encoding="utf-8", newline="") as handle:
                 self._take_ownership(handle.fileno(), name, original)
                 handle.write(intended)
                 handle.flush()
@@ -194,7 +195,10 @@ class WpConfigFile:
 
     def _read(self) -> str:
         try:
-            return self._path.read_text(encoding="utf-8")
+            # newline="": what is on disk, CRLF included. Text mode would turn every
+            # CRLF into LF, and the next write would rewrite every line of the file.
+            with self._path.open(encoding="utf-8", newline="") as handle:
+                return handle.read()
         # ValueError covers both a file that is not UTF-8 (UnicodeDecodeError) and
         # a path carrying a NUL byte, which the OS layer rejects before any I/O.
         except (OSError, ValueError) as exc:

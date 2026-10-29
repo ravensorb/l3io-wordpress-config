@@ -31,18 +31,29 @@ Its scope is deliberately bounded, and the boundaries are these:
   whitespace aside), and `$variable` assignments at column 0, which approximates
   file scope: one indented inside a function body is not read. This is what
   makes a commented-out `// define('X', 'y');` correctly invisible.
+- Anything inside a `/* ... */` block comment is not read and never written, as
+  PHP never runs it. `define` is matched in any case (`DEFINE(...)` is the same
+  call to PHP). Heredoc and nowdoc strings are not recognised.
 - Quoted strings are read whole, so a `)`, `;` or quote inside one never ends
   the value. WordPress's own salts contain `);` in about one site in thirteen.
 - A value that is a **PHP expression** or references another constant is
   returned as its raw source text, not evaluated.
-- Adding a constant inserts after the **first** `<?php` opening tag. A file with
-  no `<?php\n` cannot have one inserted, and raises `ConfigWriteError`.
+- Adding a constant inserts after the **first** `<?php` opening tag, ending in the
+  file's own line ending. A file with no `<?php` followed by a newline cannot have
+  one inserted, and raises `ConfigWriteError`.
+- Line endings and a UTF-8 BOM are kept as they are: WordPress ships its own
+  sample with CRLF, and a write changes the one value, not every line.
 - A key written by `set()` or `set_variable()` must be a **PHP identifier**
   (`[A-Za-z_][A-Za-z0-9_]*`); anything else raises `ConfigKeyError` before the
   content is touched.
 - `nan`, `inf` and `-inf` have no PHP literal and raise `ConfigValueError`. Written
   as `repr()` gives them, PHP 8 would read them as undefined constants and fail on
   every page load — and read-back cannot catch that, because they round-trip.
+
+The tests read and write a corpus of real configs (WordPress's own sample, the
+official Docker image's, multisite, common custom options, commented-out blocks,
+and a reverse-proxy setup), and **PHP 8.4 grades them**: what the package reads
+and writes is checked against what PHP itself runs, including 300 random writes.
 
 Because those limits are real, **every write is verified**. `WpConfigFile.set()`
 writes to a temporary file, reads it back, and checks three things before
