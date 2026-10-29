@@ -17,9 +17,10 @@ state tree is empty by design.
 
 ## Current state (2026-10-29)
 
-- Last release: **`v0.1.1`** (2026-10-20), the write-permission fix below. Before it,
+- Last release: **`v0.1.2`** (2026-10-29), the scanner fixes below. Before it, **`v0.1.1`**
+  (2026-10-20), the write-permission fix; and before that,
   **`v0.1.0`** (2026-10-12, Shawn), on GitHub Releases and the internal Gitea
-  registry, with floating `v0` and `v0.1` now pointing at `v0.1.1`. Nothing is on PyPI. Verified by
+  registry, with floating `v0` and `v0.1` now pointing at `v0.1.2`. Nothing is on PyPI. Verified by
   installing from both the release wheel and the Gitea index. Its notes first published
   as "no changes": the builder took the floating `v0.1` as the previous tag. That is
   fixed in `14512f0`, and the release body was rebuilt from `v0.0.2..v0.1.0` using
@@ -74,7 +75,7 @@ file left), and by `make ci` under act: 11 of 11.
   went to `app.infisical.com` and got 403; `INFISICAL_API_URL=https://secops.ravenwolf.org/api`
   fixed it. That is the host's environment, not this repo's.
 
-## 2026-10-29: scanner defects found by real configs, fixed for 0.1.2
+## 2026-10-29: scanner defects found by real configs, fixed in 0.1.2
 
 Shawn asked whether the tests were solid against real configs. They covered one
 fixture. Probing real shapes, with PHP 8.4 as the judge, found four defects, all fixed
@@ -94,9 +95,11 @@ recorded from PHP by `tools/record_corpus_expectations.py`) and the PHP oracle
 `L3IO_REQUIRE_PHP_ORACLE=1`. 321 tests, 95.80% coverage, floor 95.5. `make ci` under act
 passes 11 of 11, and the built wheel in a clean venv passes every reproduction.
 
-- [blocked] **Merge, push and release `v0.1.2`** — Shawn's. Then tell backup to pin
-  `>=0.1.2,<0.2`. Its ADR-0023 overwrite path calls `WpConfigString.set` on the
-  Archive's config text, so the comment and CRLF fixes reach that path too.
+- [done] **`v0.1.2` released** 2026-10-29 at Shawn's instruction: CI on `e975ca6` green
+  (oracle required), release run 40881973921, publish run 40882011183, both green;
+  floating `v0` and `v0.1` moved. Installed from the GitHub release and from Gitea, every
+  reproduction is fixed and PHP agrees. Backup told to pin `>=0.1.2,<0.2`; its ADR-0023
+  overwrite path calls `WpConfigString.set`, so the CRLF insertion fix reaches it too.
 - [todo] Design point, not fixed: on the Docker image's config, `set('DB_NAME', ...)`
   replaces `getenv_docker(...)` with a literal. That is correct per ADR-0010, but it
   silently turns an environment-driven value into a fixed one.
