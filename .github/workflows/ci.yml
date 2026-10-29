@@ -143,6 +143,9 @@ jobs:
       COVERAGE_FILE: /tmp/l3io-coverage-py${{ matrix.python }}
       # Same rule for hypothesis's example database, which defaults to ./.hypothesis.
       HYPOTHESIS_STORAGE_DIRECTORY: /tmp/l3io-hypothesis-py${{ matrix.python }}
+      # The PHP oracle (tests/test_php_oracle.py) skips without docker. Here docker
+      # is always present, on GitHub and under act, so a skip would only hide it.
+      L3IO_REQUIRE_PHP_ORACLE: "1"
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }  # hatch-vcs needs tags; shallow yields 0.1.devN

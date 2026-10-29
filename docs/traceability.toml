@@ -68,7 +68,7 @@ reason = "Restore Mode belongs to backup."
 
 [[rule]]
 id = "AD-6"
-source_sha256 = "01c83c391f84f93508b32697b9afa9aab12831b6b92718f3b98446fd4c82cfc2"
+source_sha256 = "7e4f34ea373d2af9122db026dfabaa494b3cd1c984f4d3c6f10234f5329209ef"
 binds = false
 reason = "Archive format belongs to backup. Re-judged 2026-10-20 after ADR-0014 moved encryption to age through l3io-wp-database: still backup's container, and nothing in it reaches this package."
 
@@ -147,19 +147,19 @@ not_checkable = "Release order across the three repositories and resolvability f
 
 [[rule]]
 id = "AD-16"
-source_sha256 = "8b0d5fb04acb8fe751bb13e44d13b56d5bc3cfbf982c4a6c8d7ab866991f5217"
+source_sha256 = "3085548f46f0f129535a63bdd15f1267928ec14db4cfb7927d44cf88f0ca3128"
 binds = false
 reason = "Run Context belongs to backup's composition roots."
 
 [[rule]]
 id = "AD-17"
-source_sha256 = "21c7ea220a8c80b7dc19560e56b3161d286a3ac07f09570a9bee1b09c1d442aa"
+source_sha256 = "7e94180640cc2afe7bd53711510e0f348121830927a9e3788b9e9b620bedd80f"
 binds = false
 reason = "Restore phase order belongs to backup. Re-judged 2026-10-20: the DB_NAME cutover now happens at the end of LOAD_DUMP, through the same config write, so it adds a caller, not a rule for this package. That write's own guarantees are AD-18's row."
 
 [[rule]]
 id = "AD-18"
-source_sha256 = "6fcdcc44c428bedca55015fad4cd103954361825718ca5b010cdbf4945cd56bb"
+source_sha256 = "0e1097dcf4638c00b825902a88181fb5a56bb75f99d16b753a2cfe68d32e3528"
 binds = true
 enforced_by = [
     "tests/test_file_adapter.py::test_a_failed_read_back_leaves_the_original_untouched",
@@ -169,6 +169,8 @@ enforced_by = [
     "tests/test_file_adapter.py::test_ownership_that_cannot_be_kept_refuses_the_write",
     "tests/test_file_adapter.py::test_a_planted_temp_name_is_never_written_through",
     "tests/test_file_adapter.py::test_the_write_is_flushed_to_disk_before_and_after_the_rename",
+    "tests/test_file_adapter.py::test_a_crlf_file_keeps_its_line_endings",
+    "tests/test_file_adapter.py::test_a_key_is_added_to_a_crlf_file_with_a_crlf",
 ]
 note = "Requirements 2 and 4: the atomic config write, which backup delegates to this package, and that it keeps the file's mode. Journal and staging cutover are backup's. Ownership is kept when permitted and the write is refused when not; a non-root writer of a file owned by another user is refused rather than taking it over."
 
@@ -347,6 +349,15 @@ enforced_by = [
     "tests/test_value_spans.py::test_any_variable_write_changes_only_its_own_value",
     "tests/test_value_spans.py::test_a_file_write_of_any_value_verifies_and_lands",
     "tests/test_value_spans.py::test_only_a_file_scope_variable_is_read",
+    "tests/test_php_comments.py::test_a_define_inside_a_block_comment_is_not_read",
+    "tests/test_php_comments.py::test_a_key_only_in_a_comment_is_added_as_live",
+    "tests/test_php_comments.py::test_comment_markers_inside_a_string_open_nothing",
+    "tests/test_php_comments.py::test_define_is_read_in_any_case",
+    "tests/test_real_configs.py::test_each_case_reads_as_php_reads_it",
+    "tests/test_real_configs.py::test_every_literal_in_each_case_can_be_rewritten",
+    "tests/test_php_oracle.py::test_the_expectations_are_what_php_reads",
+    "tests/test_php_oracle.py::test_php_reads_every_rewrite_where_the_package_wrote_it",
+    "tests/test_php_oracle.py::test_random_writes_land_as_php_reads_them",
 ]
 not_checkable = "The 'Revisit when' conditions are events in the world, not properties of this code. The ADR now records that condition (a) was met on 2026-10-12 and fixed within Option C, and that (b) is not met."
 
@@ -397,12 +408,60 @@ note = "Every clause has an enforcer here: no literal, hatch-vcs source, no loca
 
 [[rule]]
 id = "ADR-0014"
-source_sha256 = "e9bd0a3427e6792cf93bc87e11b30b0b3398775db8ecbc63d28984fe3c8c0eb9"
+source_sha256 = "db6a5a4b79e13711c5f088f9bd91ebab8246ae0d98063e6c16711d95f0504792"
 binds = false
 reason = "Archive encryption, by age through l3io-wp-database. Backup's and database's; this package touches no archive and no key. Re-judged 2026-10-27 after the passphrase amendment (binder package l3io-age-passphrase, age CLI fallback): still not this package's."
 
 [[rule]]
 id = "ADR-0015"
-source_sha256 = "89b2f135d34a5e3f53ad9c32bca1c8b138ee122a907605d7f80415a483dbe943"
+source_sha256 = "c2cfef2d1da7f09bd48f56a1398e49ec1cf886b86afd78a5ac6387dfb70913ea"
 binds = false
 reason = "Credential transport to MySQL client tools, delegated to l3io-wp-database. This package invokes no client tool and holds no credential beyond the text it reads; see AD-7's row."
+
+[[rule]]
+id = "ADR-0016"
+source_sha256 = "0271f431c2bfafb271b1ab4a2408bfab587f50a9f74d2ef0beea9e3ad13ba3e0"
+binds = false
+reason = "The Run Context binds adapters once, after the Site Lock and the wp-config.php read. Backup's composition root; nothing here."
+
+[[rule]]
+id = "ADR-0017"
+source_sha256 = "593b18717c682c1fb638e7777f46cf3c1b3dc65bd2f77fca6f638f5ffd078e8b"
+binds = false
+reason = "Archive Manifest v1 member index. Backup's archive format."
+
+[[rule]]
+id = "ADR-0018"
+source_sha256 = "5225698d9768c9c86077069dabff4dfb424c9021ef1a99ef99bc561bcc4c1e38"
+binds = false
+reason = "Redaction at backup's CLI and logging boundary. This package's own errors carry no credential (AD-14's row); applying redaction is backup's."
+
+[[rule]]
+id = "ADR-0019"
+source_sha256 = "82aa11c343ec8756e119d613438b76b52d8a4a9f982bcf68aecc072707be6bc8"
+binds = false
+reason = "Scope of backup's Dry Run. Backup's."
+
+[[rule]]
+id = "ADR-0020"
+source_sha256 = "82907a49355d885289f82836db016ab3eba4ac5c8e47cb322fd00fc27b6f2b39"
+binds = false
+reason = "Restore undo derived from the Run Journal. Backup's."
+
+[[rule]]
+id = "ADR-0021"
+source_sha256 = "e547a52483bc93ff6c173e757a7e059b73c5cdab818866ff51060fbd52c816e8"
+binds = false
+reason = "Run Journal location and lifecycle. Backup's."
+
+[[rule]]
+id = "ADR-0022"
+source_sha256 = "c1fc0024b5cf7880fbe8b5066187cf5b9a7c40f7b4cbc9f19c274211e690763c"
+binds = false
+reason = "Restore planned from a probe; the executor runs every phase. Backup's."
+
+[[rule]]
+id = "ADR-0023"
+source_sha256 = "c008dd539392af22217e4ce3326e8ba5cbee00b9c75154e3999ea64acefb4f1a"
+binds = false
+reason = "Whether a restore replaces the target's wp-config.php. Backup's decision and backup's write path. It applies the target's DB_* values to the Archive's config text with this package's WpConfigString.set, then writes the file itself with the same temp, fsync and replace sequence and owner rule as WpConfigFile; its revisit condition is this package offering a whole-file atomic replace."

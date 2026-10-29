@@ -61,7 +61,7 @@ stop.
 
 ## Running and verifying
 
-- `uv sync --locked` then `uv run pytest`. Expect **269 passing at ~95% coverage** (268 and 1 skipped without the sibling repo).
+- `uv sync --locked` then `uv run pytest`. Expect **321 passing at ~95.8% coverage** (320 and 1 skipped without the sibling repo).
   `[tool.coverage.report] fail_under` applies to **every** run that measures coverage, so a
   subset run (`pytest tests/test_x.py`) fails on coverage alone — pass `--no-cov`, as the
   `contracts` job does. Raise the floor when coverage rises; never lower it to make a run pass.
@@ -210,7 +210,18 @@ stop.
   That shipped: `.*?` ended values at the first `);` even inside quotes, and 7.5% of
   WordPress salt sets were corrupted on write with read-back green. Test spans against
   values with a known reading (`tests/test_value_spans.py`), never against the scanner.
-  PHP itself is the only independent oracle, and it is not in the test suite.
+  PHP itself is the only independent oracle, and since v0.1.2 it is in the suite:
+  `tests/test_php_oracle.py`, through the `php_read` fixture in `tests/conftest.py`
+  (PHP 8.4 by digest, in docker, configs piped on stdin). It skips without docker
+  unless `L3IO_REQUIRE_PHP_ORACLE=1`, which CI's test job sets, so CI cannot pass by
+  not running it. It caught a block-commented `DB_NAME` being read as live.
+- **The real-config corpus is `tests/fixtures/wp-config/`**, with `expected.json`
+  recording what PHP reads. Never hand-write an expectation: add the fixture, run
+  `uv run python tools/record_corpus_expectations.py > tests/fixtures/wp-config/expected.json`
+  (needs docker), and review the diff. The oracle fails if the file and PHP disagree.
+- **WordPress ships `wp-config-sample.php` with CRLF line endings**, and so does the
+  Docker image's config. Text-mode I/O translates them, so every file read and write
+  here uses `newline=""`; a fixture derived through `read_text()` silently becomes LF.
 - Only single-quoted values parse as strings. `define('X', "y")` returns the raw
   text `"y"`, quotes included, and a PHP expression returns its source text.
   Both are accepted limits, not bugs to fix here. (ADR-0010)

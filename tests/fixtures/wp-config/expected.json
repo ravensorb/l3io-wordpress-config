@@ -1,0 +1,245 @@
+{
+  "commented-blocks": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false,
+      "WP_MEMORY_LIMIT": "128M",
+      "WP_POST_REVISIONS": 3,
+      "ACME_TOKEN": "abc/*not-a-comment*/def",
+      "ACME_PATH": "C:\\sites\\"
+    },
+    "raw": {
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [
+      "DISABLE_WP_CRON",
+      "WP_CACHE",
+      "WP_DEBUG_DISPLAY",
+      "WP_DEBUG_LOG"
+    ],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  },
+  "custom-options": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false,
+      "WP_HOME": "https://example.com",
+      "WP_SITEURL": "https://example.com/wp",
+      "FORCE_SSL_ADMIN": true,
+      "WP_MEMORY_LIMIT": "256M",
+      "WP_MAX_MEMORY_LIMIT": "512M",
+      "DISALLOW_FILE_EDIT": true,
+      "DISALLOW_FILE_MODS": false,
+      "AUTOMATIC_UPDATER_DISABLED": true,
+      "WP_AUTO_UPDATE_CORE": "minor",
+      "WP_POST_REVISIONS": 5,
+      "AUTOSAVE_INTERVAL": 160,
+      "EMPTY_TRASH_DAYS": 0,
+      "WP_CACHE": true,
+      "WP_CACHE_KEY_SALT": "example.com:",
+      "WP_REDIS_HOST": "127.0.0.1",
+      "WP_REDIS_PORT": 6379,
+      "WP_REDIS_TIMEOUT": 1.5,
+      "WP_ENVIRONMENT_TYPE": "production",
+      "DB_PASSWORD_NOTE": "it's a \\ backslash",
+      "ACME_EMPTY": "",
+      "CONCATENATE_SCRIPTS": false,
+      "WP_DEBUG_LOG": "/var/log/wordpress/debug.log",
+      "WP_DEBUG_DISPLAY": false
+    },
+    "raw": {
+      "WP_CONTENT_DIR": "dirname( __FILE__ ) . '/content'",
+      "WP_CONTENT_URL": "WP_HOME . '/content'",
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  },
+  "docker-image": {
+    "values": {},
+    "raw": {
+      "DB_NAME": "getenv_docker('WORDPRESS_DB_NAME', 'wordpress')",
+      "DB_USER": "getenv_docker('WORDPRESS_DB_USER', 'example username')",
+      "DB_PASSWORD": "getenv_docker('WORDPRESS_DB_PASSWORD', 'example password')",
+      "DB_HOST": "getenv_docker('WORDPRESS_DB_HOST', 'mysql')",
+      "DB_CHARSET": "getenv_docker('WORDPRESS_DB_CHARSET', 'utf8mb4')",
+      "DB_COLLATE": "getenv_docker('WORDPRESS_DB_COLLATE', '')",
+      "AUTH_KEY": "getenv_docker('WORDPRESS_AUTH_KEY',         'put your unique phrase here')",
+      "SECURE_AUTH_KEY": "getenv_docker('WORDPRESS_SECURE_AUTH_KEY',  'put your unique phrase here')",
+      "LOGGED_IN_KEY": "getenv_docker('WORDPRESS_LOGGED_IN_KEY',    'put your unique phrase here')",
+      "NONCE_KEY": "getenv_docker('WORDPRESS_NONCE_KEY',        'put your unique phrase here')",
+      "AUTH_SALT": "getenv_docker('WORDPRESS_AUTH_SALT',        'put your unique phrase here')",
+      "SECURE_AUTH_SALT": "getenv_docker('WORDPRESS_SECURE_AUTH_SALT', 'put your unique phrase here')",
+      "LOGGED_IN_SALT": "getenv_docker('WORDPRESS_LOGGED_IN_SALT',   'put your unique phrase here')",
+      "NONCE_SALT": "getenv_docker('WORDPRESS_NONCE_SALT',       'put your unique phrase here')",
+      "WP_DEBUG": "!!getenv_docker('WORDPRESS_DEBUG', '')",
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": false
+  },
+  "hosting-proxy": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false,
+      "WP_ENVIRONMENT_TYPE": "staging"
+    },
+    "raw": {
+      "WP_HOME": "'https://' . $_SERVER['HTTP_HOST']",
+      "WP_SITEURL": "WP_HOME",
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_7f3a_",
+    "table_prefix_literal": true
+  },
+  "multisite": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false,
+      "WP_ALLOW_MULTISITE": true,
+      "MULTISITE": true,
+      "SUBDOMAIN_INSTALL": false,
+      "DOMAIN_CURRENT_SITE": "example.com",
+      "PATH_CURRENT_SITE": "/",
+      "SITE_ID_CURRENT_SITE": 1,
+      "BLOG_ID_CURRENT_SITE": 1
+    },
+    "raw": {
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  },
+  "wordpress-sample": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false
+    },
+    "raw": {
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  },
+  "wordpress-sample-bom": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false
+    },
+    "raw": {
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  },
+  "wordpress-sample-lf": {
+    "values": {
+      "DB_NAME": "database_name_here",
+      "DB_USER": "username_here",
+      "DB_PASSWORD": "password_here",
+      "DB_HOST": "localhost",
+      "DB_CHARSET": "utf8mb4",
+      "DB_COLLATE": "",
+      "AUTH_KEY": "put your unique phrase here",
+      "SECURE_AUTH_KEY": "put your unique phrase here",
+      "LOGGED_IN_KEY": "put your unique phrase here",
+      "NONCE_KEY": "put your unique phrase here",
+      "AUTH_SALT": "put your unique phrase here",
+      "SECURE_AUTH_SALT": "put your unique phrase here",
+      "LOGGED_IN_SALT": "put your unique phrase here",
+      "NONCE_SALT": "put your unique phrase here",
+      "WP_DEBUG": false
+    },
+    "raw": {
+      "ABSPATH": "__DIR__ . '/'"
+    },
+    "absent": [],
+    "table_prefix": "wp_",
+    "table_prefix_literal": true
+  }
+}
